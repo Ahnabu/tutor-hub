@@ -73,7 +73,10 @@
 
 ### 9. Modern UX & Form Ergonomics
 - **Password Visibility Toggles:** Toggleable Lucide `Eye`/`EyeOff` buttons across all authentication and verification forms (`/login`, `/register`, `/reset-password`, `/claim-guardian`, and `/guardian/view/[token]`).
-- **Ergonomic Marketplace Forms:** Free-text location inputs for accurate English addresses, custom SVG select carets, and generous input padding/spacing.
+- **Internal Box-Level Scrolling:** Fixed full-viewport containers (`overflow-hidden`) preventing awkward full-page browser window scrolling, with self-contained scrollbars strictly on the modal and card boxes.
+- **Verification Password Update & Account Recovery:** Expandable in-place password setup directly upon 6-digit OTP verification, alongside quick "Forgot Password?" access.
+- **Dedicated Profile Security Tab:** In-app authenticated password change with current credential verification, plus one-click remote session revocation ("Sign Out from All Other Devices").
+- **Cloudinary Credential Uploads (Max 3 MB):** Direct file chooser and drag-and-drop zone replacing raw link inputs, supporting up to 3 MB documents (JPG, PNG, PDF) with image preview and automated Cloudinary asset linkage.
 
 ---
 
