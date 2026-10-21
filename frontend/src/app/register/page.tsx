@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { GraduationCap, Users, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
@@ -20,23 +21,30 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const trimmedPhone = phone.trim();
+    if (!trimmedPhone) {
+      const msg = 'Phone number is required';
+      setError(msg);
+      showErrorToast(new Error(msg));
+      return;
+    }
+
     setLoading(true);
 
     try {
       await api.post('/auth/register', {
-        name,
-        email,
-        phone: phone ? phone.trim() : undefined,
+        name: name.trim(),
+        email: email.trim(),
+        phone: trimmedPhone,
         password,
         role,
       });
 
-      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      showSuccessToast('Registration successful! Please check your email for the verification code.');
+      router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
     } catch (err: unknown) {
-      const serverError = err as { response?: { data?: { error?: { message?: string } } } };
-      const msg =
-        serverError.response?.data?.error?.message ||
-        'Registration failed. Please check your information and try again.';
+      const msg = showErrorToast(err, 'Registration failed. Please check your information and try again.');
       setError(msg);
     } finally {
       setLoading(false);
@@ -122,13 +130,14 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Phone Number (Optional)
+                Phone Number <span className="text-emerald-400">*</span>
               </label>
               <input
                 type="tel"
+                required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+88017XXXXXXXX"
+                placeholder="017XXXXXXXX or +88017XXXXXXXX"
                 className="w-full px-3.5 py-2.5 bg-slate-950/50 border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
               />
             </div>

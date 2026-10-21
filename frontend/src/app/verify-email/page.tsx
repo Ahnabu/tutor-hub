@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { MailCheck, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -38,12 +39,10 @@ function VerifyEmailContent() {
         otp: otp.trim(),
       });
 
+      showSuccessToast('Email verified successfully! Welcome to TutorHub.');
       login(res.data.data.user);
     } catch (err: unknown) {
-      const serverError = err as { response?: { data?: { error?: { message?: string } } } };
-      const msg =
-        serverError.response?.data?.error?.message ||
-        'Verification failed. Please check the code and try again.';
+      const msg = showErrorToast(err, 'Verification failed. Please check the code and try again.');
       setError(msg);
     } finally {
       setLoading(false);
@@ -60,11 +59,12 @@ function VerifyEmailContent() {
       const res = await api.post('/auth/resend-otp', {
         email: email.trim().toLowerCase(),
       });
-      setInfoMessage(res.data.data.message || 'A new verification code has been sent.');
+      const successMsg = res.data.data.message || 'A new verification code has been sent.';
+      setInfoMessage(successMsg);
+      showSuccessToast(successMsg);
       setCooldown(60);
     } catch (err: unknown) {
-      const serverError = err as { response?: { data?: { error?: { message?: string } } } };
-      const msg = serverError.response?.data?.error?.message || 'Could not resend code. Please try again.';
+      const msg = showErrorToast(err, 'Could not resend code. Please try again.');
       setError(msg);
     } finally {
       setResending(false);

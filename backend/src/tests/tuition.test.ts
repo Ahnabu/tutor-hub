@@ -74,7 +74,7 @@ describe('Tuition Engine & Next-Day Memory Prefill Test Suite', () => {
           },
         ],
         scheduleConfig: {
-          billingModel: BillingModel.PER_CLASS_COUNT,
+          billingModel: BillingModel.MONTHLY_CYCLE,
           targetDaysPerCycle: 12,
           weeklyDays: [WeekDay.SUN, WeekDay.TUE, WeekDay.THU],
           durationMinutes: 90,

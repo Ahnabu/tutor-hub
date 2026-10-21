@@ -4,6 +4,7 @@ import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { KeyRound, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -22,7 +23,9 @@ function ResetPasswordContent() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      const msg = 'Passwords do not match';
+      setError(msg);
+      showErrorToast(new Error(msg));
       return;
     }
 
@@ -34,13 +37,11 @@ function ResetPasswordContent() {
         newPassword: password,
       });
 
+      showSuccessToast('Your password has been successfully reset!');
       setIsSuccess(true);
     } catch (err: unknown) {
-      const serverError = err as { response?: { data?: { error?: { message?: string } } } };
-      setError(
-        serverError.response?.data?.error?.message ||
-          'Failed to reset password. The link may have expired.'
-      );
+      const msg = showErrorToast(err, 'Failed to reset password. The link may have expired.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

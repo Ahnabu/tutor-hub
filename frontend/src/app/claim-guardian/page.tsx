@@ -3,9 +3,9 @@
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import axios from 'axios';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { ShieldCheck, ArrowRight, Loader2, AlertCircle, Mail } from 'lucide-react';
 
@@ -32,15 +32,10 @@ function ClaimGuardianContent() {
 
       setEmailHint(res.data.data.email);
       setStep('VERIFY');
+      showSuccessToast('Verification code sent to your email.');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.error?.message ||
-            'Invalid or expired claim invitation link.'
-        );
-      } else {
-        setError('Invalid or expired claim invitation link.');
-      }
+      const msg = showErrorToast(err, 'Invalid or expired claim invitation link.');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -58,16 +53,11 @@ function ClaimGuardianContent() {
         password,
       });
 
+      showSuccessToast('Guardian account activated! Welcome to TutorHub.');
       login(res.data.data.user);
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.error?.message ||
-            'Verification failed. Please check the code and try again.'
-        );
-      } else {
-        setError('Verification failed. Please check the code and try again.');
-      }
+      const msg = showErrorToast(err, 'Verification failed. Please check the code and try again.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

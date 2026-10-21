@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { ArrowRight, Loader2, AlertCircle, LogIn } from 'lucide-react';
 
@@ -25,12 +26,10 @@ export default function LoginPage() {
         password,
       });
 
+      showSuccessToast(`Welcome back, ${res.data.data.user.name || 'Tutor'}!`);
       login(res.data.data.user);
     } catch (err: unknown) {
-      const serverError = err as { response?: { data?: { error?: { message?: string } } } };
-      const msg =
-        serverError.response?.data?.error?.message ||
-        'Login failed. Please check your credentials and try again.';
+      const msg = showErrorToast(err, 'Login failed. Please check your credentials and try again.');
       setError(msg);
     } finally {
       setLoading(false);

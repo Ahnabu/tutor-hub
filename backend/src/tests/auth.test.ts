@@ -36,6 +36,7 @@ describe('Auth Endpoints & Token Security Matrix', () => {
       .send({
         name: 'Tanvir Hossain',
         email: testEmail,
+        phone: '01711223344',
         password: testPassword,
         role: UserRole.TEACHER,
       });

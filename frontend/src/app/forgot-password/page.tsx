@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import axios from 'axios';
 import { api } from '@/lib/api';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { KeyRound, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -22,16 +22,14 @@ export default function ForgotPasswordPage() {
       const res = await api.post('/auth/forgot-password', {
         email: email.trim().toLowerCase(),
       });
-      setSuccessMessage(
+      const msg =
         res.data.data.message ||
-          'If this email is registered, password reset instructions have been sent.'
-      );
+        'If this email is registered, password reset instructions have been sent.';
+      setSuccessMessage(msg);
+      showSuccessToast(msg);
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error?.message || 'Failed to submit request.');
-      } else {
-        setError('Failed to submit request.');
-      }
+      const msg = showErrorToast(err, 'Failed to submit request. Please try again.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

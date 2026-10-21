@@ -37,7 +37,7 @@ export const createTuitionSchema = z
     monthlyFee: z.number().positive(),
     cycleStartDate: z.string().datetime().optional(),
     guardianName: z.string().max(100).optional(),
-    guardianPhone: z.string().regex(/^(\+?880|0)?1[3-9]\d{8}$/, 'Valid Bangladeshi mobile number required').optional(),
+    guardianPhone: z.string().regex(/^(\+?880|0)?1[3-9]\d{8}$/, 'Valid Bangladeshi guardian phone number is required'),
     guardianEmail: z.string().email().optional(),
     teacherNotes: z.string().max(1000).optional(),
   })

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
@@ -379,8 +380,17 @@ function CreateTuitionModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    const trimmedGuardianPhone = guardianPhone.trim();
+    if (!trimmedGuardianPhone) {
+      const msg = 'Guardian phone number is required';
+      setError(msg);
+      showErrorToast(new Error(msg));
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const subjectList = subjects
@@ -406,13 +416,14 @@ function CreateTuitionModal({
         },
         monthlyFee: parseFloat(monthlyFee) || 0,
         guardianName: guardianName.trim() || undefined,
-        guardianPhone: guardianPhone.trim() || undefined,
+        guardianPhone: trimmedGuardianPhone,
       });
 
+      showSuccessToast('Tuition contract created successfully!');
       onSuccess();
     } catch (err: unknown) {
-      const serverErr = err as { response?: { data?: { error?: { message?: string } } } };
-      setError(serverErr.response?.data?.error?.message || 'Failed to create tuition contract');
+      const msg = showErrorToast(err, 'Failed to create tuition contract');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -508,23 +519,26 @@ function CreateTuitionModal({
           </div>
 
           <div className="pt-2 border-t border-white/[0.05]">
-            <span className="text-xs font-semibold text-slate-300">Guardian Contact (Optional)</span>
+            <span className="text-xs font-semibold text-slate-300">
+              Guardian Information <span className="text-emerald-400">*</span>
+            </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
               <div>
                 <input
                   type="text"
                   value={guardianName}
                   onChange={(e) => setGuardianName(e.target.value)}
-                  placeholder="Guardian's Name"
+                  placeholder="Guardian's Name (e.g. Mr. Khan)"
                   className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <div>
                 <input
-                  type="text"
+                  type="tel"
+                  required
                   value={guardianPhone}
                   onChange={(e) => setGuardianPhone(e.target.value)}
-                  placeholder="Phone: 01711223344"
+                  placeholder="Guardian Phone: 017XXXXXXXX *"
                   className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
@@ -615,10 +629,11 @@ function LogSessionModal({
         guardianVisibleRemarks: remarks.trim() || undefined,
       });
 
+      showSuccessToast('Class session and Next-Day memory logged!');
       onSuccess();
     } catch (err: unknown) {
-      const serverErr = err as { response?: { data?: { error?: { message?: string } } } };
-      setError(serverErr.response?.data?.error?.message || 'Failed to log session');
+      const msg = showErrorToast(err, 'Failed to log session');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -830,10 +845,11 @@ function RecordPaymentModal({
         advanceCycle,
       });
 
+      showSuccessToast('Payment recorded successfully!');
       onSuccess();
     } catch (err: unknown) {
-      const serverErr = err as { response?: { data?: { error?: { message?: string } } } };
-      setError(serverErr.response?.data?.error?.message || 'Failed to record payment');
+      const msg = showErrorToast(err, 'Failed to record payment');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -966,8 +982,9 @@ function GuardianShareModal({
         accessPin: pin.trim() || undefined,
       });
       setShareData(res.data.data);
-    } catch {
-      alert('Failed to generate guardian link');
+      showSuccessToast('Guardian transparency link generated!');
+    } catch (err: unknown) {
+      showErrorToast(err, 'Failed to generate guardian link');
     } finally {
       setLoading(false);
     }
@@ -981,6 +998,7 @@ function GuardianShareModal({
     if (!fullUrl) return;
     navigator.clipboard.writeText(fullUrl);
     setCopied(true);
+    showSuccessToast('Guardian portal link copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
 

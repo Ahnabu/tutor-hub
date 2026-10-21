@@ -7,8 +7,7 @@ export const registerSchema = z
     email: z.string().email('Valid email address is required').toLowerCase(),
     phone: z
       .string()
-      .regex(/^\+8801[3-9]\d{8}$/, 'Phone must be a valid Bangladeshi number (+8801XXXXXXXXX)')
-      .optional(),
+      .regex(/^(\+?880|0)?1[3-9]\d{8}$/, 'Valid Bangladeshi mobile number is required (e.g. 017XXXXXXXX)'),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')

@@ -47,6 +47,7 @@ const seedAdmin = async () => {
     if (!existingAdmin.roles.includes(UserRole.TEACHER)) {
       existingAdmin.roles.push(UserRole.TEACHER);
     }
+    existingAdmin.phone = '+8801700000000';
     existingAdmin.teacherProfile = adminTeacherProfile;
     adminUser = await existingAdmin.save();
     console.log(`✅ Admin account updated successfully with verified profile: ${email}`);
@@ -54,6 +55,7 @@ const seedAdmin = async () => {
     adminUser = await User.create({
       name: 'System Administrator',
       email,
+      phone: '+8801700000000',
       passwordHash,
       roles: [UserRole.ADMIN, UserRole.TEACHER],
       accountStatus: AccountStatus.ACTIVE,
