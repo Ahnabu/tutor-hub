@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   title: 'TutorHub — Operations & Memory Platform for Private Tutors',
   description:
     'High-performance operations SaaS for private tutors and guardians in Bangladesh. Cycle day tracking, next-day memory logging, and zero-friction guardian portals.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

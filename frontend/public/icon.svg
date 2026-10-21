@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="tutorhub-gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded Squircle Background -->
+  <rect width="32" height="32" rx="8" fill="url(#tutorhub-gradient)" />
+  <!-- Graduation Cap -->
+  <path d="M16 7L5 12.5L16 18L27 12.5L16 7Z" fill="#090D16" />
+  <path d="M8.5 14.5V19C8.5 21.8 11.8 24 16 24C20.2 24 23.5 21.8 23.5 19V14.5L16 18.2L8.5 14.5Z" fill="#090D16" />
+  <!-- Tassel -->
+  <path d="M25 13.5V19.5" stroke="#090D16" stroke-width="1.5" stroke-linecap="round" />
+  <circle cx="25" cy="20.5" r="1" fill="#090D16" />
+</svg>
