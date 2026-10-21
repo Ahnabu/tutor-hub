@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
+import { OtpInput } from '@/components/OtpInput';
 import { ShieldCheck, ArrowRight, Loader2, AlertCircle, Mail, Eye, EyeOff } from 'lucide-react';
 
 function ClaimGuardianContent() {
@@ -133,17 +134,19 @@ function ClaimGuardianContent() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-slate-300 mb-1.5 text-center">
               6-Digit Verification Code
             </label>
-            <input
-              type="text"
-              required
-              maxLength={6}
+            <OtpInput
+              length={6}
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-              placeholder="• • • • • •"
-              className="w-full px-3.5 py-3 text-center tracking-[0.5em] font-mono text-xl font-bold bg-slate-950/50 border border-white/[0.08] rounded-xl text-emerald-400 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+              onChange={(val) => {
+                setOtp(val);
+                setError(null);
+              }}
+              disabled={loading}
+              hasError={!!error}
+              autoFocus={true}
             />
           </div>
 
