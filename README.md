@@ -76,7 +76,7 @@
 - **Internal Box-Level Scrolling:** Fixed full-viewport containers (`overflow-hidden`) preventing awkward full-page browser window scrolling, with self-contained scrollbars strictly on the modal and card boxes.
 - **Verification Password Update & Account Recovery:** Expandable in-place password setup directly upon 6-digit OTP verification, alongside quick "Forgot Password?" access.
 - **Dedicated Profile Security Tab:** In-app authenticated password change with current credential verification, plus one-click remote session revocation ("Sign Out from All Other Devices").
-- **Cloudinary Credential Uploads (Max 3 MB):** Direct file chooser and drag-and-drop zone replacing raw link inputs, supporting up to 3 MB documents (JPG, PNG, PDF) with image preview and automated Cloudinary asset linkage.
+- **Dual-Credential Verification Uploads (Max 3 MB each):** Dedicated upload zones for National ID / Birth Certificate and University Student ID with interactive drag-and-drop, real-time image previews, file size validation, verification guidelines, and smooth micro-animations.
 
 ---
 
