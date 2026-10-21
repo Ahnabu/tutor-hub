@@ -137,12 +137,12 @@ npm run dev
 - [x] Resource ownership middleware pattern (`loadOwnedTuition`).
 - [x] Comprehensive unit & integration tests (`backend/src/tests/middleware.test.ts` - 18/18 tests passing).
 
-### Step 3: Auth Endpoints & Admin Seeder
-- [ ] Auth endpoints: Register (Teacher/Guardian), Verify Email (OTP), Resend OTP, Login, Refresh (with family reuse detection), Logout, Logout-All, Forgot/Reset Password, `/auth/me`.
-- [ ] Guardian Claim flow: `/auth/claim-guardian/start`, `/auth/claim-guardian/verify`.
-- [ ] Cloudinary signature endpoint (`/uploads/signature`) enforcing server-dictated paths.
-- [ ] Admin seed script (`npm run seed:admin`).
-- [ ] Comprehensive unit & integration tests (`vitest` + `supertest` + `mongodb-memory-server`).
+### Step 3: Auth Endpoints & Admin Seeder — COMPLETED
+- [x] Auth endpoints: Register (Teacher/Guardian), Verify Email (OTP), Resend OTP, Login, Refresh (with family reuse detection), Logout, Logout-All, Forgot/Reset Password, `/auth/me`.
+- [x] Guardian Claim flow: `/auth/claim-guardian/start`, `/auth/claim-guardian/verify` (activates shadow account and links tuitions).
+- [x] Cloudinary signature endpoint (`/uploads/signature`) enforcing server-dictated paths and 60s lifetime.
+- [x] Admin seed script (`npm run seed:admin` / `src/scripts/seedAdmin.ts`) with `--force` override option.
+- [x] Comprehensive integration tests (`backend/src/tests/auth.test.ts` - 25/25 tests passing across entire suite).
 
 ### Step 4: Frontend Responsive Shell & Auth Workflows
 - [ ] Global Theme Provider (`next-themes`) & React Query Client Provider.
