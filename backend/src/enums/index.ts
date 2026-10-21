@@ -38,6 +38,7 @@ export enum ContactApprovedBy {
 }
 
 export enum ContactGrantSource {
+  DIRECT_REQUEST = 'DIRECT_REQUEST',
   MARKETPLACE_ACCEPT = 'MARKETPLACE_ACCEPT',
   INVITE = 'INVITE',
   ACTIVE_TUITION = 'ACTIVE_TUITION',

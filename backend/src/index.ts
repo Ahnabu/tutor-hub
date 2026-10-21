@@ -11,6 +11,9 @@ import { EmailWorker } from './services/email.service.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { uploadRoutes } from './routes/upload.routes.js';
 import { tuitionRoutes } from './routes/tuition.routes.js';
+import { guardianRoutes } from './routes/guardian.routes.js';
+import { teacherRoutes } from './routes/teacher.routes.js';
+import { contactRoutes } from './routes/contact.routes.js';
 
 const app = express();
 
@@ -47,6 +50,9 @@ app.get('/readyz', (_req: Request, res: Response) => {
 app.use(`${env.API_PREFIX}/auth`, authRoutes);
 app.use(`${env.API_PREFIX}/uploads`, uploadRoutes);
 app.use(`${env.API_PREFIX}/tuitions`, tuitionRoutes);
+app.use(`${env.API_PREFIX}/guardian`, guardianRoutes);
+app.use(`${env.API_PREFIX}/teachers`, teacherRoutes);
+app.use(`${env.API_PREFIX}/contact-requests`, contactRoutes);
 
 // 7. Central Error Handler
 app.use(errorHandler);

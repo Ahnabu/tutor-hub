@@ -9,10 +9,11 @@ The following features are purposefully deferred to future phases per the projec
 - Manual payment ledger.
 - PWA manifest and offline draft queue.
 
-### Phase 3:
+### Phase 3 — COMPLETED:
 - Guardian PIN-protected read-only viewer (`/guardian/view/[token]`).
-- Claimed guardian multi-tutor portal.
-- Public SEO-optimized teacher directory.
+- Claimed guardian multi-tutor portal (`/guardian`).
+- Public SEO-optimized teacher directory (`/teachers`).
+- Public gated teacher profile page (`/teachers/[slug]`).
 - Teacher verification document submission interface.
 - ContactAccessRequest workflow and audit entries.
 

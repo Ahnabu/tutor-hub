@@ -20,6 +20,8 @@ import {
   Sparkles,
   X,
   AlertCircle,
+  Inbox,
+  UserCheck,
 } from 'lucide-react';
 
 interface Student {
@@ -80,6 +82,8 @@ export default function TeacherDashboardPage() {
 
   // Modal States
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isRequestsOpen, setIsRequestsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedTuitionForSession, setSelectedTuitionForSession] = useState<Tuition | null>(null);
   const [selectedTuitionForPayment, setSelectedTuitionForPayment] = useState<Tuition | null>(null);
   const [selectedTuitionForShare, setSelectedTuitionForShare] = useState<Tuition | null>(null);
@@ -92,6 +96,18 @@ export default function TeacherDashboardPage() {
       return res.data.data.tuitions;
     },
   });
+
+  // Fetch incoming contact requests
+  const { data: incomingRequests = [] } = useQuery({
+    queryKey: ['teacher-incoming-requests'],
+    queryFn: async () => {
+      const res = await api.get('/contact-requests/incoming');
+      return res.data.data.requests;
+    },
+  });
+  const pendingRequestsCount = (incomingRequests as Array<{ status: string }>).filter(
+    (r) => r.status === 'PENDING'
+  ).length;
 
   // Calculate High-Level Metrics
   const activeTuitions = tuitions.filter((t) => t.status === 'ACTIVE');
@@ -120,14 +136,39 @@ export default function TeacherDashboardPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="h-11 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all shrink-0 cursor-pointer"
-          >
-            <Plus className="h-4 w-4 stroke-[2.5]" />
-            <span>Create New Tuition</span>
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsRequestsOpen(true)}
+              className="h-11 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer relative"
+            >
+              <Inbox className="h-4 w-4 text-emerald-400" />
+              <span>Contact Requests</span>
+              {pendingRequestsCount > 0 && (
+                <span className="h-5 px-1.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold font-mono flex items-center justify-center">
+                  {pendingRequestsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsProfileOpen(true)}
+              className="h-11 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer"
+            >
+              <UserCheck className="h-4 w-4 text-indigo-400" />
+              <span>Profile & Verification</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCreateOpen(true)}
+              className="h-11 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all shrink-0 cursor-pointer"
+            >
+              <Plus className="h-4 w-4 stroke-[2.5]" />
+              <span>Create New Tuition</span>
+            </button>
+          </div>
         </div>
 
         {/* Quick Stats Grid */}
@@ -350,6 +391,23 @@ export default function TeacherDashboardPage() {
         <GuardianShareModal
           tuition={selectedTuitionForShare}
           onClose={() => setSelectedTuitionForShare(null)}
+        />
+      )}
+
+      {/* MODAL: Incoming Contact Requests */}
+      {isRequestsOpen && (
+        <IncomingRequestsModal
+          onClose={() => setIsRequestsOpen(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['teacher-incoming-requests'] });
+          }}
+        />
+      )}
+
+      {/* MODAL: Profile & Verification */}
+      {isProfileOpen && (
+        <TeacherProfileModal
+          onClose={() => setIsProfileOpen(false)}
         />
       )}
 
@@ -1092,3 +1150,423 @@ function GuardianShareModal({
     </div>
   );
 }
+
+// ==============================================================================
+// 5. INCOMING CONTACT REQUESTS MODAL
+// ==============================================================================
+function IncomingRequestsModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: ['teacher-incoming-requests'],
+    queryFn: async () => {
+      const res = await api.get('/contact-requests/incoming');
+      return res.data.data.requests;
+    },
+  });
+
+  const handleRespond = async (id: string, action: 'APPROVE' | 'REJECT') => {
+    setRespondingId(id);
+    try {
+      await api.post(`/contact-requests/${id}/respond`, { action });
+      showSuccessToast(
+        action === 'APPROVE'
+          ? 'Contact request approved! The guardian can now see your phone & WhatsApp.'
+          : 'Request declined.'
+      );
+      queryClient.invalidateQueries({ queryKey: ['teacher-incoming-requests'] });
+      onSuccess();
+    } catch (err: unknown) {
+      showErrorToast(err, 'Failed to update request status');
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      <div className="w-full max-w-lg bg-slate-900 border border-white/[0.1] rounded-2xl p-6 shadow-2xl relative my-8">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="flex items-center gap-2 mb-1">
+          <Inbox className="h-5 w-5 text-emerald-400" />
+          <h3 className="text-xl font-bold text-white">Guardian Contact Requests</h3>
+        </div>
+        <p className="text-xs text-slate-400 mb-5">
+          Guardians who viewed your public profile and requested direct phone / WhatsApp communication.
+        </p>
+
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-400 mx-auto mb-2" />
+            <span className="text-xs text-slate-400">Loading requests...</span>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="p-8 text-center rounded-xl bg-slate-950/60 border border-white/[0.05] text-xs text-slate-400">
+            No contact requests received yet.
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            {requests.map((r: any) => {
+              const isPending = r.status === 'PENDING';
+              const isApproved = r.status === 'APPROVED';
+
+              return (
+                <div
+                  key={r.id}
+                  className="p-4 rounded-xl bg-slate-950/80 border border-white/[0.06] space-y-2.5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{r.guardian.name}</h4>
+                      <div className="flex items-center gap-2 text-xs text-slate-400 font-mono mt-0.5">
+                        <span>{r.guardian.phone}</span>
+                        {r.guardian.email && <span>• {r.guardian.email}</span>}
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold uppercase ${
+                        isApproved
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : isPending
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      }`}
+                    >
+                      {r.status}
+                    </span>
+                  </div>
+
+                  {r.reasonOrNote && (
+                    <p className="text-xs text-slate-300 italic bg-slate-900/60 p-2.5 rounded-lg border border-white/[0.04]">
+                      &ldquo;{r.reasonOrNote}&rdquo;
+                    </p>
+                  )}
+
+                  {isPending && (
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.05]">
+                      <button
+                        type="button"
+                        disabled={respondingId === r.id}
+                        onClick={() => handleRespond(r.id, 'REJECT')}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        Decline
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={respondingId === r.id}
+                        onClick={() => handleRespond(r.id, 'APPROVE')}
+                        className="h-8 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-500/20"
+                      >
+                        {respondingId === r.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        )}
+                        <span>Approve Contact</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==============================================================================
+// 6. TEACHER PROFILE & VERIFICATION MODAL
+// ==============================================================================
+function TeacherProfileModal({ onClose }: { onClose: () => void }) {
+  const { user } = useAuth();
+  const profile = user?.teacherProfile;
+
+  const [isPublic, setIsPublic] = useState(profile?.isPublic ?? true);
+  const [institution, setInstitution] = useState(profile?.institution || 'Dhaka University');
+  const [department, setDepartment] = useState(profile?.department || 'Physics');
+  const [batchOrYear, setBatchOrYear] = useState(profile?.batchOrYear || '2020');
+  const [experienceYears, setExperienceYears] = useState(
+    profile?.experienceYears?.toString() || '3'
+  );
+  const [bio, setBio] = useState(
+    profile?.bio || 'Passionate physics and mathematics tutor specializing in HSC syllabus.'
+  );
+  const [subjects, setSubjects] = useState(
+    profile?.subjectsOffered?.join(', ') || 'Physics, Higher Math'
+  );
+  const [areas, setAreas] = useState(
+    profile?.preferredAreas?.join(', ') || 'Dhanmondi, Mirpur, Mohammadpur'
+  );
+  const [expectedRateRange, setExpectedRateRange] = useState(
+    profile?.expectedRateRange || '8,000 - 12,000 BDT'
+  );
+
+  const [docUrl, setDocUrl] = useState('');
+  const [docType, setDocType] = useState('National ID (NID)');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [submittingDoc, setSubmittingDoc] = useState(false);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+
+    try {
+      const subjectList = subjects.split(',').map((s) => s.trim()).filter(Boolean);
+      const areaList = areas.split(',').map((s) => s.trim()).filter(Boolean);
+
+      await api.patch('/teachers/profile', {
+        isPublic,
+        institution: institution.trim() || undefined,
+        department: department.trim() || undefined,
+        batchOrYear: batchOrYear.trim() || undefined,
+        experienceYears: parseInt(experienceYears, 10) || 0,
+        bio: bio.trim() || undefined,
+        subjectsOffered: subjectList,
+        preferredAreas: areaList,
+        expectedRateRange: expectedRateRange.trim() || undefined,
+      });
+
+      showSuccessToast('Public profile updated successfully!');
+      onClose();
+    } catch (err: unknown) {
+      showErrorToast(err, 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!docUrl.trim()) return;
+    setSubmittingDoc(true);
+
+    try {
+      await api.post('/teachers/verification', {
+        docs: [
+          {
+            url: docUrl.trim(),
+            publicId: `doc-${Date.now()}`,
+            docType,
+          },
+        ],
+      });
+
+      showSuccessToast('Verification document submitted! Under review by administration.');
+      setDocUrl('');
+    } catch (err: unknown) {
+      showErrorToast(err, 'Failed to submit document');
+    } finally {
+      setSubmittingDoc(false);
+    }
+  };
+
+  const verificationStatus = profile?.verificationStatus || 'UNSUBMITTED';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      <div className="w-full max-w-xl bg-slate-900 border border-white/[0.1] rounded-2xl p-6 shadow-2xl relative my-8">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <h3 className="text-xl font-bold text-white mb-1">Public Profile & Verification</h3>
+        <p className="text-xs text-slate-400 mb-6">
+          Customize your tutor directory card and submit credentials for background verification.
+        </p>
+
+        {/* Verification Status Banner */}
+        <div className="mb-6 p-4 rounded-xl bg-slate-950 border border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <UserCheck className="h-5 w-5 text-indigo-400" />
+            <div>
+              <span className="text-xs font-bold text-white block">Verification Badge</span>
+              <span className="text-[11px] text-slate-400">
+                Status:{' '}
+                <strong
+                  className={`font-mono uppercase ${
+                    verificationStatus === 'VERIFIED'
+                      ? 'text-emerald-400'
+                      : verificationStatus === 'PENDING'
+                      ? 'text-amber-400'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {verificationStatus}
+                </strong>
+              </span>
+            </div>
+          </div>
+
+          {verificationStatus === 'VERIFIED' && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Verified
+            </span>
+          )}
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-white/[0.06]">
+            <div>
+              <span className="text-xs font-bold text-white block">List in Public Directory</span>
+              <span className="text-[11px] text-slate-400">
+                Allow verified guardians to discover your profile
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              className="h-5 w-5 accent-emerald-500 cursor-pointer"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">University / College</label>
+              <input
+                type="text"
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
+                placeholder="e.g. University of Dhaka"
+                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Department & Batch</label>
+              <input
+                type="text"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="e.g. Physics '20"
+                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Experience (Years)</label>
+              <input
+                type="number"
+                value={experienceYears}
+                onChange={(e) => setExperienceYears(e.target.value)}
+                placeholder="3"
+                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Expected Rate Range</label>
+              <input
+                type="text"
+                value={expectedRateRange}
+                onChange={(e) => setExpectedRateRange(e.target.value)}
+                placeholder="e.g. 8,000 - 12,000 BDT"
+                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Bio / Profile Description</label>
+            <textarea
+              rows={3}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Highlight your teaching approach, past results, and subject expertise..."
+              className="w-full p-3 bg-slate-950 border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Subjects Offered (Comma separated)</label>
+            <input
+              type="text"
+              value={subjects}
+              onChange={(e) => setSubjects(e.target.value)}
+              placeholder="Physics, Higher Math, ICT"
+              className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Preferred Areas (Comma separated)</label>
+            <input
+              type="text"
+              value={areas}
+              onChange={(e) => setAreas(e.target.value)}
+              placeholder="Dhanmondi, Mirpur, Mohammadpur"
+              className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.05]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={savingProfile}
+              className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              <span>Save Profile Changes</span>
+            </button>
+          </div>
+        </form>
+
+        {/* Verification Document Upload Sub-section */}
+        <div className="mt-8 pt-6 border-t border-white/[0.08]">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+            Submit Document For Verification
+          </h4>
+          <form onSubmit={handleVerifySubmit} className="flex gap-2">
+            <input
+              type="url"
+              required
+              value={docUrl}
+              onChange={(e) => setDocUrl(e.target.value)}
+              placeholder="Document URL (https://...)"
+              className="flex-1 h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+            />
+            <button
+              type="submit"
+              disabled={submittingDoc || !docUrl.trim()}
+              className="h-10 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer disabled:opacity-50"
+            >
+              {submittingDoc ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+              <span>Submit Doc</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+

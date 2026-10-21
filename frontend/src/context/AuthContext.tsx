@@ -18,10 +18,15 @@ export interface IUser {
   avatarUrl?: string;
   teacherProfile?: {
     isPublic: boolean;
+    verificationStatus?: string;
     institution?: string;
     department?: string;
+    batchOrYear?: string;
+    experienceYears?: number;
+    bio?: string;
     subjectsOffered: string[];
     preferredAreas: string[];
+    expectedRateRange?: string;
     isVerifiedTutor?: boolean;
     slug?: string;
   };
