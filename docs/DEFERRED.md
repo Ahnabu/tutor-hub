@@ -2,12 +2,17 @@
 
 The following features are purposefully deferred to future phases per the project plan:
 
-### Phase 2:
-- Tuition CRUD, student management, and share link generation.
+### Phase 1 — COMPLETED:
+- Argon2id password hashing & JWT refresh token rotation with family reuse revocation.
+- OTP verification with email dispatch via Mailpit.
+- Role-based authorization matrix (TEACHER, GUARDIAN, ADMIN).
+- Centralized error handling & rate limiting.
+
+### Phase 2 — COMPLETED:
+- Tuition CRUD, multi-student management, and share link generation.
 - Daily session logging with "Next-Day Memory" prefill.
 - Transactional cycle counters, extra/makeup logic, and rollover to `CycleHistory`.
 - Manual payment ledger.
-- PWA manifest and offline draft queue.
 
 ### Phase 3 — COMPLETED:
 - Guardian PIN-protected read-only viewer (`/guardian/view/[token]`).

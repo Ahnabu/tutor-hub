@@ -203,3 +203,29 @@ npm run dev
   - 34/34 passing unit & integration tests in `backend/` (including 9 new tuition & session tests).
   - 0 lint errors, 0 lint warnings in `frontend/`.
   - Clean Next.js 16 production build.
+
+## 8. Phase 3: Guardian Portal & Gated Teacher Profiles — COMPLETED
+- [x] **PIN-Protected Guardian Viewer (`/guardian/view/[token]`):**
+  - Verification endpoint `POST /guardian/view/:token/verify-pin` with Argon2id PIN verification and 15-minute brute-force lockout.
+  - Generates 7-day signed JWT view-session cookie.
+  - Sanitized read-only tuition data: student names, cycle day counter, session history with teacher remarks, and payment ledger.
+  - Zero private contact leak guarantee (tutor phone & email excluded).
+- [x] **Claimed Guardian Multi-Tutor Dashboard (`/guardian`):**
+  - Aggregates all active tuitions linked to the guardian's verified mobile number or email.
+  - Real-time cycle progress bars, payment status pills, and tutor information.
+  - "My Contact Requests" tracking section: reveals tutor phone, WhatsApp, and email once approved.
+- [x] **Public SEO Teacher Directory (`/teachers`):**
+  - Search by tutor name, university, or subjects.
+  - Subject and Dhaka area filter pills.
+  - Verified badges, experience counters, and expected rate ranges.
+- [x] **Privacy-Gated Teacher Profile Page (`/teachers/[slug]`):**
+  - Full bio, credentials, subjects offered, and preferred areas.
+  - "Request Direct Contact Information" workflow with requirement note modal.
+  - Automatic reveal of phone & WhatsApp once granted by teacher.
+- [x] **Teacher Control Plane Upgrades (`/teacher`):**
+  - "Incoming Contact Requests" drawer with Approve / Decline actions and audit log creation.
+  - "Profile & Verification" settings modal for directory toggle, bio, subjects, rate range, and NID/University ID submission.
+- [x] **Phase 3 Test Suite:**
+  - 45/45 passing unit & integration tests in `backend/` (all 6 test files passing).
+  - Clean Next.js 16 production build with 14 static and dynamic routes.
+
