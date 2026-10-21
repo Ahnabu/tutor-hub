@@ -73,6 +73,7 @@ export const signAccessToken = (payload: IAccessTokenPayload): string => {
 export const signRefreshToken = (payload: IRefreshTokenPayload): string => {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
+    jwtid: crypto.randomUUID(),
   });
 };
 

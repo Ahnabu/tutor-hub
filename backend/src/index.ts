@@ -8,6 +8,8 @@ import { globalLimiter } from './middlewares/rateLimit.js';
 import { csrfProtection } from './middlewares/csrf.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { EmailWorker } from './services/email.service.js';
+import { authRoutes } from './routes/auth.routes.js';
+import { uploadRoutes } from './routes/upload.routes.js';
 
 const app = express();
 
@@ -40,7 +42,11 @@ app.get('/readyz', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ready', timestamp: new Date().toISOString() });
 });
 
-// 6. Central Error Handler
+// 6. Application API Routes
+app.use(`${env.API_PREFIX}/auth`, authRoutes);
+app.use(`${env.API_PREFIX}/uploads`, uploadRoutes);
+
+// 7. Central Error Handler
 app.use(errorHandler);
 
 // Boot server if not in test mode
