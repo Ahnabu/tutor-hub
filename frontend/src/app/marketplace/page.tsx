@@ -18,7 +18,9 @@ import {
   Users,
   CheckCircle2,
   X,
+  ChevronDown,
 } from 'lucide-react';
+
 
 interface IMarketplacePostItem {
   id: string;
@@ -179,19 +181,21 @@ export default function MarketplacePage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="relative">
               <select
                 value={selectedMode}
                 onChange={(e) => setSelectedMode(e.target.value)}
-                className="px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-white/[0.08] text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-slate-900/60 border border-white/[0.08] text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer hover:border-white/[0.18] transition-colors"
               >
-                <option value="ALL">All Modes</option>
-                <option value="IN_PERSON">In-Person Only</option>
-                <option value="ONLINE">Online Only</option>
-                <option value="HYBRID">Hybrid</option>
+                <option value="ALL" className="bg-[#0D1322] text-white py-1.5">All Modes</option>
+                <option value="IN_PERSON" className="bg-[#0D1322] text-white py-1.5">In-Person Only</option>
+                <option value="ONLINE" className="bg-[#0D1322] text-white py-1.5">Online Only</option>
+                <option value="HYBRID" className="bg-[#0D1322] text-white py-1.5">Hybrid</option>
               </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             </div>
           </div>
+
 
           {/* Dhaka Area Filter Chips */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">

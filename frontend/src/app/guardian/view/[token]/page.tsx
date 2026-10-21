@@ -20,6 +20,8 @@ import {
   ShieldCheck,
   AlertCircle,
   FileText,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface SessionEntry {
@@ -79,6 +81,7 @@ export default function GuardianPortalViewPage() {
   const router = useRouter();
 
   const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [submittingPin, setSubmittingPin] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
 
@@ -181,17 +184,26 @@ export default function GuardianPortalViewPage() {
             )}
 
             <form onSubmit={handleVerifyPin} className="space-y-4">
-              <div>
+              <div className="relative">
                 <input
-                  type="password"
+                  type={showPin ? 'text' : 'password'}
                   required
                   autoFocus
                   maxLength={6}
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   placeholder="Enter PIN (e.g. 1234)"
-                  className="w-full h-12 px-4 rounded-xl bg-slate-950/80 border border-white/[0.1] text-lg text-white font-mono text-center tracking-widest placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                  className="w-full h-12 pl-4 pr-11 rounded-xl bg-slate-950/80 border border-white/[0.1] text-lg text-white font-mono text-center tracking-widest placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
                 />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPin(!showPin)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
+                  aria-label={showPin ? 'Hide PIN' : 'Show PIN'}
+                >
+                  {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
 
               <button

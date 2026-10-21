@@ -71,6 +71,10 @@
 - **Self-Service Data Export (`GET /api/v1/auth/export-data`):** Comprehensive JSON export of all personal profile records, tuitions, session logs, and marketplace activities.
 - **Account Self-Deletion (`POST /api/v1/auth/delete-account`):** Irreversible profile anonymization, active token revocation, and tuition archival.
 
+### 9. Modern UX & Form Ergonomics
+- **Password Visibility Toggles:** Toggleable Lucide `Eye`/`EyeOff` buttons across all authentication and verification forms (`/login`, `/register`, `/reset-password`, `/claim-guardian`, and `/guardian/view/[token]`).
+- **Ergonomic Marketplace Forms:** Free-text location inputs for accurate English addresses, custom SVG select carets, and generous input padding/spacing.
+
 ---
 
 
