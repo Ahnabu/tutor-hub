@@ -109,18 +109,21 @@ npm run dev
 
 ## 5. Next Steps Plan (Phase 1 Implementation)
 
-### Step 1: Backend Schemas & Data Layer (Separated Collections)
-- [ ] Implement Mongoose models in `backend/src/models/`:
-  - `User.ts` (public-safe fields, `passwordHash` select:false, `tokenVersion`)
-  - `TeacherPrivateProfile.ts` (1:1 with User, WhatsApp, alternate phone, encrypted docs)
-  - `RefreshSession.ts` (token family tracking, reuse detection)
-  - `Tuition.ts` (tuition agreement, cycle counter status, payment ledger, guardian share token hash)
-  - `SessionLog.ts` (daily entries, idempotency key `clientRequestId`, attendance)
-  - `CycleHistory.ts` (archived billing cycles)
-  - `ContactAccessRequest.ts` & `ContactGrant.ts`
-  - `EmailOutbox.ts` (asynchronous email queue)
-  - `AuditLog.ts` (append-only audit trail)
-  - `Notification.ts` (in-app notifications)
+### Step 1: Backend Schemas & Data Layer (Separated Collections) — COMPLETED
+- [x] Implement Mongoose models in `backend/src/models/`:
+  - [x] `User.ts` (public-safe fields, `passwordHash` select:false, `tokenVersion`)
+  - [x] `TeacherPrivateProfile.ts` (1:1 with User, WhatsApp, alternate phone, encrypted docs)
+  - [x] `RefreshSession.ts` (token family tracking, reuse detection, TTL index)
+  - [x] `Tuition.ts` (tuition agreement, cycle counter status, payment ledger, guardian share token hash)
+  - [x] `SessionLog.ts` (daily entries, idempotency key `clientRequestId`, attendance, local date)
+  - [x] `CycleHistory.ts` (archived billing cycles)
+  - [x] `ContactAccessRequest.ts` & `ContactGrant.ts`
+  - [x] `MarketplacePost.ts` & `MarketplaceApplication.ts`
+  - [x] `EmailOutbox.ts` (asynchronous email queue)
+  - [x] `AuditLog.ts` (append-only audit trail)
+  - [x] `Notification.ts` (in-app notifications)
+  - [x] `SystemConfig.ts` (system-wide tunables)
+- [x] Unit test verification in `backend/src/tests/models.test.ts` (8/8 tests passing)
 
 ### Step 2: Backend Core Security Middleware & Utility Layer
 - [ ] Strict Zod request validator (`validateRequest`) with `.strict()` schemas.
