@@ -1,14 +1,10 @@
 import Link from 'next/link';
 import {
   GraduationCap,
-  Users,
   ShieldCheck,
   Calendar,
-  Sparkles,
   ArrowRight,
   BookOpen,
-  CheckCircle2,
-  Clock,
 } from 'lucide-react';
 
 export default function Home() {
@@ -111,7 +107,7 @@ export default function Home() {
             <h3 className="text-lg font-bold text-white mb-2">Next-Day Memory Prefill</h3>
             <p className="text-sm text-slate-400 leading-relaxed">
               Never forget where you left off. Daily sessions automatically pre-fill unfinished
-              topics, homework assigned last session, and today's lesson plan.
+              topics, homework assigned last session, and today&apos;s lesson plan.
             </p>
           </div>
 

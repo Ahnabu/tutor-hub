@@ -144,15 +144,34 @@ npm run dev
 - [x] Admin seed script (`npm run seed:admin` / `src/scripts/seedAdmin.ts`) with `--force` override option.
 - [x] Comprehensive integration tests (`backend/src/tests/auth.test.ts` - 25/25 tests passing across entire suite).
 
-### Step 4: Frontend Responsive Shell & Auth Workflows
-- [ ] Global Theme Provider (`next-themes`) & React Query Client Provider.
-- [ ] Axios client with mutex single-flight 401 refresh interceptor.
-- [ ] Responsive navigation shell:
-  - Mobile: Floating glass bottom navigation bar.
-  - Desktop: Sticky top header + glass container layout.
-- [ ] Auth pages:
-  - Register (role picker: Tutor vs Guardian)
-  - Email OTP verification modal/page
-  - Login page
-  - Password Reset & Guardian Claim screens
-  - Role-based dashboard placeholders (`/teacher`, `/guardian`, `/admin`)
+### Step 4: Frontend Responsive Shell & Auth Workflows — COMPLETED
+- [x] Tailwind CSS v4 configured with `@tailwindcss/postcss` and PostCSS config.
+- [x] Global Theme Provider (`next-themes`) & React Query Client Provider (`providers.tsx`).
+- [x] Axios client with mutex single-flight 401 refresh interceptor (`frontend/src/lib/api.ts`).
+- [x] Responsive navigation shell:
+  - Mobile: Floating glass bottom navigation bar (`BottomNav.tsx`).
+  - Desktop: Sticky top header with brand logo, user pill, logout, and theme toggle (`Navbar.tsx`).
+- [x] Auth pages with glassmorphism dark/light design system:
+  - Landing page (`/`) with features and CTA
+  - Register (`/register` with role picker: Teacher vs Guardian, validation)
+  - Email OTP verification (`/verify-email` with 6-digit pin code & resend countdown)
+  - Login page (`/login`)
+  - Forgot Password (`/forgot-password`)
+  - Password Reset (`/reset-password?token=...`)
+  - Guardian Claim screen (`/claim-guardian?token=...` with start & OTP verification steps)
+  - Role-based dashboard shells (`/teacher`, `/guardian`, `/admin`)
+- [x] Zero ESLint warnings/errors, TypeScript compiled, 13/13 routes statically prerendered with Next.js Turbopack.
+
+---
+
+## 6. Phase 1 Verification Matrix (Definition of Done)
+| Check | Status | Evidence |
+|---|---|---|
+| Decoupled Repos | PASS | `backend/` and `frontend/` have standalone `package.json`, isolated lockfiles |
+| Production Vulnerabilities | 0 | `npm audit --omit=dev` produces 0 vulnerabilities in both apps |
+| Test Coverage | PASS | 25/25 passing tests in `backend/` (middleware, models, auth, health) |
+| Strict Config | PASS | Zod boot validator in backend (`env.ts`), validated Next.js envs |
+| Security Middlewares | PASS | Recursive NoSQL sanitizer, strict Zod schemas, CSRF header checks, rate limiting |
+| Auth Security | PASS | Argon2id, SHA-256 tokens, JWT access/refresh rotation, family revocation on theft |
+| Responsive UI | PASS | Next.js 16 + Tailwind CSS v4, mobile-first floating dock, desktop navbar, theme toggle |
+| Build & Lint | PASS | 0 lint warnings/errors across backend & frontend; Next.js 13/13 routes built |
