@@ -10,6 +10,7 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  changePasswordSchema,
   claimStartSchema,
   claimVerifySchema,
 } from '../schemas/auth.schema.js';
@@ -62,6 +63,13 @@ router.post(
   authLimiter,
   validateRequest({ body: resetPasswordSchema }),
   AuthController.resetPassword
+);
+
+router.post(
+  '/change-password',
+  authenticate,
+  validateRequest({ body: changePasswordSchema }),
+  AuthController.changePassword
 );
 
 router.get('/me', authenticate, AuthController.getMe);

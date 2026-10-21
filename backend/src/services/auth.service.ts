@@ -128,6 +128,7 @@ export class AuthService {
   static async verifyEmail(
     email: string,
     otp: string,
+    newPassword?: string,
     userAgent?: string,
     ip?: string
   ): Promise<IAuthResult> {
@@ -163,6 +164,12 @@ export class AuthService {
       user.otpAttempts = (user.otpAttempts || 0) + 1;
       await user.save();
       throw new BadRequestError('Invalid verification code', 'INVALID_OTP');
+    }
+
+    // Optionally update password if requested upon verification
+    if (newPassword) {
+      user.passwordHash = await hashPassword(newPassword);
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
     }
 
     // Activate user
@@ -452,6 +459,41 @@ export class AuthService {
     await RefreshSession.updateMany({ userId: user._id }, { revokedAt: new Date() });
 
     return { message: 'Password has been reset successfully. You can now log in.' };
+  }
+
+  /**
+   * Change password for authenticated user
+   */
+  static async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    const user = await User.findById(userId).select('+passwordHash');
+    if (!user) {
+      throw new NotFoundError('User not found', 'USER_NOT_FOUND');
+    }
+
+    if (!user.passwordHash) {
+      throw new BadRequestError('Account does not have a local password configured', 'NO_PASSWORD_SET');
+    }
+
+    const isValid = await verifyPassword(user.passwordHash, currentPassword);
+    if (!isValid) {
+      throw new BadRequestError('Current password is incorrect', 'INVALID_CREDENTIALS');
+    }
+
+    user.passwordHash = await hashPassword(newPassword);
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
+
+    // Revoke previous refresh sessions
+    await RefreshSession.updateMany(
+      { userId: user._id },
+      { revokedAt: new Date() }
+    );
+
+    return { message: 'Password changed successfully.' };
   }
 
   /**

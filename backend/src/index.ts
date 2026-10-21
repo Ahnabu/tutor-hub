@@ -30,8 +30,8 @@ app.use(
 
 // 2. Cookie & Body Parsers with limits
 app.use(cookieParser(env.COOKIE_SECRET));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 3. Global Rate Limiter
 app.use(globalLimiter);

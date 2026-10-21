@@ -22,6 +22,16 @@ import {
   AlertCircle,
   Inbox,
   UserCheck,
+  User,
+  ShieldCheck,
+  Lock,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LogOut,
+  UploadCloud,
+  FileText,
+  Trash2,
 } from 'lucide-react';
 
 interface Student {
@@ -1319,10 +1329,26 @@ function TeacherProfileModal({ onClose }: { onClose: () => void }) {
     profile?.expectedRateRange || '8,000 - 12,000 BDT'
   );
 
-  const [docUrl, setDocUrl] = useState('');
+  // Verification Document File State (Max 3 MB)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [docType, setDocType] = useState('National ID (NID)');
   const [savingProfile, setSavingProfile] = useState(false);
   const [submittingDoc, setSubmittingDoc] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'profile' | 'verification' | 'security'>('profile');
+
+  // Security & Password Change State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [loggingOutAll, setLoggingOutAll] = useState(false);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1353,217 +1379,572 @@ function TeacherProfileModal({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Strict 3 MB limit check
+    if (file.size > 3 * 1024 * 1024) {
+      showErrorToast(null, 'File size exceeds 3 MB limit. Please select a smaller document.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setSelectedFile(file);
+    if (file.type.startsWith('image/')) {
+      const previewUrl = URL.createObjectURL(file);
+      setFilePreview(previewUrl);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+      setFilePreview(null);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!docUrl.trim()) return;
+    if (!selectedFile) {
+      showErrorToast(null, 'Please select a document file to upload (Max 3 MB).');
+      return;
+    }
     setSubmittingDoc(true);
 
     try {
+      // 1. Convert file to Base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+
+      // 2. Upload file to Cloudinary via backend endpoint
+      const uploadRes = await api.post('/uploads/document', {
+        fileData: base64Data,
+        docType,
+      });
+
+      const { url: cloudUrl, publicId } = uploadRes.data.data;
+
+      // 3. Save Cloudinary document link to the database
       await api.post('/teachers/verification', {
         docs: [
           {
-            url: docUrl.trim(),
-            publicId: `doc-${Date.now()}`,
+            url: cloudUrl,
+            publicId,
             docType,
           },
         ],
       });
 
-      showSuccessToast('Verification document submitted! Under review by administration.');
-      setDocUrl('');
+      showSuccessToast('Document successfully uploaded to Cloudinary & submitted for review!');
+      handleRemoveFile();
     } catch (err: unknown) {
-      showErrorToast(err, 'Failed to submit document');
+      showErrorToast(err, 'Failed to upload and submit document');
     } finally {
       setSubmittingDoc(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      showErrorToast(null, 'New password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showErrorToast(null, 'New password and confirmation do not match.');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+
+      showSuccessToast('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: unknown) {
+      showErrorToast(err, 'Failed to change password. Please verify your current password.');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleLogoutAll = async () => {
+    setLoggingOutAll(true);
+    try {
+      await api.post('/auth/logout-all');
+      showSuccessToast('Signed out of all other devices successfully.');
+    } catch (err: unknown) {
+      showErrorToast(err, 'Could not sign out of other devices.');
+    } finally {
+      setLoggingOutAll(false);
     }
   };
 
   const verificationStatus = profile?.verificationStatus || 'UNSUBMITTED';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-xl bg-slate-900 border border-white/[0.1] rounded-2xl p-6 shadow-2xl relative my-8">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        <h3 className="text-xl font-bold text-white mb-1">Public Profile & Verification</h3>
-        <p className="text-xs text-slate-400 mb-6">
-          Customize your tutor directory card and submit credentials for background verification.
-        </p>
-
-        {/* Verification Status Banner */}
-        <div className="mb-6 p-4 rounded-xl bg-slate-950 border border-white/[0.08] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <UserCheck className="h-5 w-5 text-indigo-400" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-hidden">
+      {/* Self-contained dialog box with internal scroll strictly on the box */}
+      <div className="w-full max-w-2xl bg-slate-900 border border-white/[0.1] rounded-2xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-fadeIn">
+        {/* Fixed Modal Header */}
+        <div className="p-5 pb-0 border-b border-white/[0.08] shrink-0 bg-slate-900">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-xs font-bold text-white block">Verification Badge</span>
-              <span className="text-[11px] text-slate-400">
-                Status:{' '}
-                <strong
-                  className={`font-mono uppercase ${
-                    verificationStatus === 'VERIFIED'
-                      ? 'text-emerald-400'
-                      : verificationStatus === 'PENDING'
-                      ? 'text-amber-400'
-                      : 'text-slate-400'
-                  }`}
-                >
-                  {verificationStatus}
-                </strong>
-              </span>
+              <h3 className="text-lg sm:text-xl font-bold text-white">Profile & Account Settings</h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Manage your tutor profile, submit verification credentials, and configure password security.
+              </p>
             </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
-          {verificationStatus === 'VERIFIED' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Verified
-            </span>
-          )}
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSaveProfile} className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-white/[0.06]">
-            <div>
-              <span className="text-xs font-bold text-white block">List in Public Directory</span>
-              <span className="text-[11px] text-slate-400">
-                Allow verified guardians to discover your profile
-              </span>
-            </div>
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-              className="h-5 w-5 accent-emerald-500 cursor-pointer"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">University / College</label>
-              <input
-                type="text"
-                value={institution}
-                onChange={(e) => setInstitution(e.target.value)}
-                placeholder="e.g. University of Dhaka"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Department & Batch</label>
-              <input
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Physics '20"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Experience (Years)</label>
-              <input
-                type="number"
-                value={experienceYears}
-                onChange={(e) => setExperienceYears(e.target.value)}
-                placeholder="3"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Expected Rate Range</label>
-              <input
-                type="text"
-                value={expectedRateRange}
-                onChange={(e) => setExpectedRateRange(e.target.value)}
-                placeholder="e.g. 8,000 - 12,000 BDT"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">Bio / Profile Description</label>
-            <textarea
-              rows={3}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Highlight your teaching approach, past results, and subject expertise..."
-              className="w-full p-3 bg-slate-950 border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">Subjects Offered (Comma separated)</label>
-            <input
-              type="text"
-              value={subjects}
-              onChange={(e) => setSubjects(e.target.value)}
-              placeholder="Physics, Higher Math, ICT"
-              className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">Preferred Areas (Comma separated)</label>
-            <input
-              type="text"
-              value={areas}
-              onChange={(e) => setAreas(e.target.value)}
-              placeholder="Dhanmondi, Mirpur, Mohammadpur"
-              className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.05]">
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-px">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+                activeTab === 'profile'
+                  ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
+              }`}
             >
-              Cancel
+              <User className="h-3.5 w-3.5" />
+              <span>Tutor Profile</span>
             </button>
+
             <button
-              type="submit"
-              disabled={savingProfile}
-              className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+              type="button"
+              onClick={() => setActiveTab('verification')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+                activeTab === 'verification'
+                  ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
+              }`}
             >
-              {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              <span>Save Profile Changes</span>
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Verification</span>
+              {verificationStatus === 'VERIFIED' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('security')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+                activeTab === 'security'
+                  ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
+              }`}
+            >
+              <Lock className="h-3.5 w-3.5" />
+              <span>Security & Password</span>
             </button>
           </div>
-        </form>
+        </div>
 
-        {/* Verification Document Upload Sub-section */}
-        <div className="mt-8 pt-6 border-t border-white/[0.08]">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
-            Submit Document For Verification
-          </h4>
-          <form onSubmit={handleVerifySubmit} className="flex gap-2">
-            <input
-              type="url"
-              required
-              value={docUrl}
-              onChange={(e) => setDocUrl(e.target.value)}
-              placeholder="Document URL (https://...)"
-              className="flex-1 h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-            />
-            <button
-              type="submit"
-              disabled={submittingDoc || !docUrl.trim()}
-              className="h-10 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer disabled:opacity-50"
-            >
-              {submittingDoc ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-              <span>Submit Doc</span>
-            </button>
-          </form>
+        {/* Scrollable Body - SCROLL HAPPENS DIRECTLY ON THE BOX */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 overscroll-contain">
+          {/* TAB 1: TUTOR PROFILE */}
+          {activeTab === 'profile' && (
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-white/[0.06]">
+                <div>
+                  <span className="text-xs font-bold text-white block">List in Public Directory</span>
+                  <span className="text-[11px] text-slate-400">
+                    Allow verified guardians to discover your tutor profile in search
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(e) => setIsPublic(e.target.checked)}
+                  className="h-5 w-5 accent-emerald-500 cursor-pointer"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-300 font-medium mb-1">University / College</label>
+                  <input
+                    type="text"
+                    value={institution}
+                    onChange={(e) => setInstitution(e.target.value)}
+                    placeholder="e.g. University of Dhaka"
+                    className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-300 font-medium mb-1">Department & Batch</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="e.g. Physics '20"
+                    className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-300 font-medium mb-1">Experience (Years)</label>
+                  <input
+                    type="number"
+                    value={experienceYears}
+                    onChange={(e) => setExperienceYears(e.target.value)}
+                    placeholder="3"
+                    className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-300 font-medium mb-1">Expected Rate Range</label>
+                  <input
+                    type="text"
+                    value={expectedRateRange}
+                    onChange={(e) => setExpectedRateRange(e.target.value)}
+                    placeholder="e.g. 8,000 - 12,000 BDT"
+                    className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-300 font-medium mb-1">Bio / Profile Description</label>
+                <textarea
+                  rows={3}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Highlight your teaching approach, past student results, and academic background..."
+                  className="w-full p-3.5 bg-slate-950 border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-300 font-medium mb-1">Subjects Offered (Comma separated)</label>
+                <input
+                  type="text"
+                  value={subjects}
+                  onChange={(e) => setSubjects(e.target.value)}
+                  placeholder="Physics, Higher Math, ICT"
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-300 font-medium mb-1">Preferred Areas (Comma separated)</label>
+                <input
+                  type="text"
+                  value={areas}
+                  onChange={(e) => setAreas(e.target.value)}
+                  placeholder="Dhanmondi, Mirpur, Mohammadpur"
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.05]">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  <span>Save Profile Changes</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 2: VERIFICATION & CREDENTIALS */}
+          {activeTab === 'verification' && (
+            <div className="space-y-6">
+              {/* Verification Status Banner */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-white/[0.08] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <UserCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white block">Tutor Verification Badge</span>
+                    <span className="text-[11px] text-slate-400">
+                      Status:{' '}
+                      <strong
+                        className={`font-mono uppercase ${
+                          verificationStatus === 'VERIFIED'
+                            ? 'text-emerald-400'
+                            : verificationStatus === 'PENDING'
+                            ? 'text-amber-400'
+                            : 'text-slate-400'
+                        }`}
+                      >
+                        {verificationStatus}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+
+                {verificationStatus === 'VERIFIED' ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-mono">
+                    Under Review
+                  </span>
+                )}
+              </div>
+
+              {/* Upload Document Section */}
+              <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-3">
+                <h4 className="text-xs font-bold text-white">Upload Credential Document</h4>
+                <p className="text-[11px] text-slate-400">
+                  Select a document file from your device (Max 3 MB). It will be securely stored on Cloudinary and submitted to administration for verification.
+                </p>
+
+                <form onSubmit={handleVerifySubmit} className="space-y-3 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-400 mb-1">Document Type</label>
+                    <select
+                      value={docType}
+                      onChange={(e) => setDocType(e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl bg-slate-900 border border-white/[0.08] text-xs text-white focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="National ID (NID)">National ID (NID)</option>
+                      <option value="University Student ID">University Student ID</option>
+                      <option value="Graduation Certificate">Graduation Certificate</option>
+                      <option value="Academic Transcript">Academic Transcript</option>
+                    </select>
+                  </div>
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {/* Interactive File Drop / Picker Zone */}
+                  {selectedFile ? (
+                    <div className="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {filePreview ? (
+                          <img
+                            src={filePreview}
+                            alt="Document preview"
+                            className="h-12 w-12 rounded-lg object-cover border border-white/[0.1] shrink-0"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <FileText className="h-6 w-6" />
+                          </div>
+                        )}
+                        <div className="truncate">
+                          <span className="text-xs font-semibold text-white block truncate">
+                            {selectedFile.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready to upload
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                        title="Remove file"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-white/[0.1] hover:border-emerald-500/50 rounded-xl p-5 text-center cursor-pointer transition-all bg-slate-900/40 hover:bg-slate-900/70 group"
+                    >
+                      <UploadCloud className="h-8 w-8 text-slate-400 group-hover:text-emerald-400 mx-auto mb-2 transition-colors" />
+                      <span className="text-xs font-semibold text-slate-300 group-hover:text-white block">
+                        Choose document file from device
+                      </span>
+                      <span className="text-[11px] text-slate-500 block mt-1">
+                        Maximum file size: <strong>3 MB</strong> • Supports JPG, PNG, WEBP, or PDF
+                      </span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submittingDoc || !selectedFile}
+                    className="w-full h-11 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-400 hover:to-emerald-400 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-indigo-500/15"
+                  >
+                    {submittingDoc ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Uploading to Cloudinary & Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="h-4 w-4" />
+                        <span>Upload to Cloudinary & Submit Document</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: SECURITY & PASSWORD */}
+          {activeTab === 'security' && (
+            <div className="space-y-6">
+              {/* Change Password Card */}
+              <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-4">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-emerald-400" />
+                  <h4 className="text-sm font-bold text-white">Change Account Password</h4>
+                </div>
+
+                <form onSubmit={handleChangePassword} className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Current Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        required
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Enter your current password"
+                        className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                        aria-label="Toggle password visibility"
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      New Password (Min. 8 characters)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        required
+                        minLength={8}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter a secure new password"
+                        className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                        aria-label="Toggle password visibility"
+                      >
+                        {showNewPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Confirm New Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repeat your new password"
+                        className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                        aria-label="Toggle confirm password visibility"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={changingPassword || !currentPassword || !newPassword}
+                    className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {changingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    <span>Update Account Password</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* Session Management Card */}
+              <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-3">
+                <div className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4 text-amber-400" />
+                  <h4 className="text-xs font-bold text-white">Device Sessions</h4>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Lost your phone or logged in on a public computer? Revoke all other active sessions across devices immediately.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleLogoutAll}
+                  disabled={loggingOutAll}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {loggingOutAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  <span>Sign Out of All Other Devices</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

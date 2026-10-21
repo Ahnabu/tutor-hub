@@ -15,4 +15,11 @@ router.post(
   UploadController.getSignature
 );
 
+router.post(
+  '/document',
+  authenticate,
+  uploadLimiter,
+  UploadController.uploadDocument
+);
+
 export const uploadRoutes = router;

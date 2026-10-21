@@ -21,10 +21,11 @@ export class AuthController {
 
   static async verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { email, otp } = req.body;
+      const { email, otp, newPassword } = req.body;
       const result = await AuthService.verifyEmail(
         email,
         otp,
+        newPassword,
         req.headers['user-agent'],
         req.ip
       );
@@ -206,6 +207,28 @@ export class AuthController {
       const result = await AuthService.deleteAccount(user._id.toString());
 
       clearAuthCookies(res);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/change-password
+   */
+  static async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = req.user as IUser;
+      const { currentPassword, newPassword } = req.body;
+      const result = await AuthService.changePassword(
+        user._id.toString(),
+        currentPassword,
+        newPassword
+      );
 
       res.status(200).json({
         success: true,
