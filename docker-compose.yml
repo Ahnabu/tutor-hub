@@ -1,0 +1,26 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: tutorhub-mongo
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 27017 --eval 'try { rs.status().ok } catch(e) { rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"localhost:27017\"}]}).ok }'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: tutorhub-mailpit
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI
+    restart: unless-stopped
+
+volumes:
+  mongo-data:

@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+:root {
+  /* Light Theme (Alabaster & Frosted White) */
+  --bg-canvas: #f8fafc;
+  --bg-surface: rgba(255, 255, 255, 0.75);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.9);
+  --border-glass: rgba(15, 23, 42, 0.08);
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+
+  /* Semantic Accents */
+  --accent-emerald: #059669;
+  --accent-amber: #d97706;
+  --accent-coral: #e11d48;
+  --accent-indigo: #4f46e5;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+}
+
+.dark {
+  /* Dark Theme (Obsidian & Slate Glass) */
+  --bg-canvas: #090d16;
+  --bg-surface: rgba(17, 24, 39, 0.65);
+  --bg-surface-elevated: rgba(30, 41, 59, 0.75);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-coral: #f43f5e;
+  --accent-indigo: #6366f1;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  min-height: 100vh;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphic Surface Utilities */
+.glass-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-panel-elevated {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+}
+
+/* Touch targets and mobile helpers */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
