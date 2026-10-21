@@ -8,7 +8,7 @@ export class GuardianController {
    */
   static async verifyPin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { token } = req.params;
+      const token = req.params.token as string;
       const { pin } = req.body;
 
       const result = await GuardianService.verifyPin(token, pin);
@@ -42,7 +42,7 @@ export class GuardianController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { token } = req.params;
+      const token = req.params.token as string;
       const viewSessionToken =
         (req.cookies?.guardian_view_token as string) ||
         (req.headers['x-guardian-view-token'] as string);

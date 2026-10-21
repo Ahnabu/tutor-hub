@@ -161,7 +161,7 @@ export class TeacherService {
     ]);
 
     return {
-      teachers: teachers.map((t) => toPublicTeacherDTO(t as IUser)),
+      teachers: teachers.map((t) => toPublicTeacherDTO(t as unknown as IUser)),
       total,
     };
   }
@@ -184,6 +184,6 @@ export class TeacherService {
       throw new NotFoundError('Teacher profile not found or is currently private');
     }
 
-    return toPublicTeacherDTO(user as IUser);
+    return toPublicTeacherDTO(user as unknown as IUser);
   }
 }

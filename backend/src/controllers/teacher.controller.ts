@@ -69,7 +69,7 @@ export class TeacherController {
    */
   static async getPublicTeacher(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { identifier } = req.params;
+      const identifier = req.params.identifier as string;
       const teacher = await TeacherService.getPublicTeacher(identifier);
 
       res.status(200).json({

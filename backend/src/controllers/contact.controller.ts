@@ -70,7 +70,7 @@ export class ContactController {
   static async respondToRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = req.user as IUser;
-      const { id } = req.params;
+      const id = req.params.id as string;
       const { action } = req.body;
 
       const request = await ContactService.respondToRequest(user._id.toString(), id, action);
@@ -90,7 +90,7 @@ export class ContactController {
   static async getRevealedContact(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = req.user as IUser;
-      const { teacherId } = req.params;
+      const teacherId = req.params.teacherId as string;
 
       const contact = await ContactService.getRevealedContact(user._id.toString(), teacherId);
 
