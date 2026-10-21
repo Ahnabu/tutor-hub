@@ -10,6 +10,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { EmailWorker } from './services/email.service.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { uploadRoutes } from './routes/upload.routes.js';
+import { tuitionRoutes } from './routes/tuition.routes.js';
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.get('/readyz', (_req: Request, res: Response) => {
 // 6. Application API Routes
 app.use(`${env.API_PREFIX}/auth`, authRoutes);
 app.use(`${env.API_PREFIX}/uploads`, uploadRoutes);
+app.use(`${env.API_PREFIX}/tuitions`, tuitionRoutes);
 
 // 7. Central Error Handler
 app.use(errorHandler);

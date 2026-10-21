@@ -175,3 +175,31 @@ npm run dev
 | Auth Security | PASS | Argon2id, SHA-256 tokens, JWT access/refresh rotation, family revocation on theft |
 | Responsive UI | PASS | Next.js 16 + Tailwind CSS v4, mobile-first floating dock, desktop navbar, theme toggle |
 | Build & Lint | PASS | 0 lint warnings/errors across backend & frontend; Next.js 13/13 routes built |
+
+---
+
+## 7. Phase 2: Teacher Workspace & Tuition Management — COMPLETED
+- [x] **Branding & Logo Update:**
+  - Removed default Next.js favicon and unused SVGs.
+  - Deployed custom TutorHub emerald gradient squircle graduation cap icon (`/icon.svg`).
+- [x] **Tuition Management Engine:**
+  - `POST /tuitions` (contract creation with student subdocs, schedule config, shadow guardian linking).
+  - `GET /tuitions` & `GET /tuitions/:id` (teacher-scoped tuition retrieval with cycle progress calculations).
+  - `PATCH /tuitions/:id` (update schedule, fees, and notes).
+  - `POST /tuitions/:id/share-token` (cryptographically secure 64-char guardian share token with Argon2id PIN protection).
+  - `POST /tuitions/:id/record-payment` (payment ledger tracking, PARTIAL/PAID status, cycle reset, and archival to `CycleHistory`).
+  - `POST /tuitions/:id/archive` (tuition archival).
+- [x] **Next-Day Memory Prefill & Idempotent Session Logging:**
+  - `GET /tuitions/:id/sessions/prefill` (queries last completed class, automatically extracting unfinished topics, homework, and next class plan).
+  - `POST /tuitions/:id/sessions` (idempotent logging with `clientRequestId`, automatic cycle day increment, and cycle completion detection).
+  - `GET /tuitions/:id/sessions` & `PATCH /tuitions/:id/sessions/:sessionId` (history with audit log tracking).
+- [x] **Teacher Dashboard UI:**
+  - Responsive cards with cycle progress bars (`X / 12 Days Completed`), billing status pills, and revenue statistics.
+  - Interactive **Create Tuition Modal** with multi-subject tags.
+  - Interactive **Log Session Modal** featuring real-time **Next-Day Memory Prefill** banner.
+  - Interactive **Record Payment Modal** (Cash, bKash, Nagad, Bank) with optional cycle advancement.
+  - Interactive **Guardian Share Modal** with 1-click clipboard copy and direct WhatsApp sharing.
+- [x] **Automated Test Suite:**
+  - 34/34 passing unit & integration tests in `backend/` (including 9 new tuition & session tests).
+  - 0 lint errors, 0 lint warnings in `frontend/`.
+  - Clean Next.js 16 production build.

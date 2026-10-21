@@ -71,6 +71,7 @@ export interface ITuition extends Document {
   payments: IPaymentRecord[];
   guardianAccess: IGuardianAccess;
   status: TuitionStatus;
+  teacherNotes?: string;
   deletedAt?: Date;
   version: number;
   createdAt: Date;
@@ -181,6 +182,7 @@ const TuitionSchema = new Schema<ITuition>(
       default: TuitionStatus.ACTIVE,
       required: true,
     },
+    teacherNotes: { type: String, trim: true },
     deletedAt: { type: Date },
   },
   {
