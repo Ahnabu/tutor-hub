@@ -1,7 +1,8 @@
 # TutorHub (Teacher Hub) — Project Context & Living Knowledge Base
 
 > **Last Updated:** October 2026  
-> **Status:** Phase 1 Setup & Scaffolding Completed & Validated  
+> **Status:** Phase 1 Setup & Scaffolding Completed, Validated & Pushed  
+> **Repository:** [https://github.com/Ahnabu/tutor-hub](https://github.com/Ahnabu/tutor-hub) (Branch: `main`)  
 > **Frontend Validation:** Next.js 16 App Router + Tailwind v4 + React 19 (`npm run lint` & `tsc --noEmit`: 0 errors)  
 > **Backend Validation:** Node.js + Express 5 + Mongoose 8 + TypeScript (`npm run build`: 0 errors)  
 > **Target Audience:** Private tutors, guardians, and students in Bangladesh (BDT currency, `Asia/Dhaka` timezone, week starts Saturday).
