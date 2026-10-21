@@ -73,10 +73,23 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as Error);
-        // Only redirect on browser client
+        // Only redirect on browser client if NOT already on a public or auth page
         if (typeof window !== 'undefined') {
-          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-          window.location.href = '/login?session_expired=true';
+          const pathname = window.location.pathname;
+          const isPublicOrAuthPage =
+            pathname === '/' ||
+            pathname.startsWith('/login') ||
+            pathname.startsWith('/register') ||
+            pathname.startsWith('/verify-email') ||
+            pathname.startsWith('/forgot-password') ||
+            pathname.startsWith('/reset-password') ||
+            pathname.startsWith('/claim-guardian') ||
+            pathname.startsWith('/guardian');
+
+          if (!isPublicOrAuthPage) {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.href = '/login?session_expired=true';
+          }
         }
         return Promise.reject(refreshError);
       } finally {
