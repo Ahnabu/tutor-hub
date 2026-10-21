@@ -2,7 +2,11 @@ import { User, IUser } from '../models/User.js';
 import { RefreshSession } from '../models/RefreshSession.js';
 import { Tuition } from '../models/Tuition.js';
 import { TeacherPrivateProfile } from '../models/TeacherPrivateProfile.js';
-import { UserRole, AccountStatus, LinkStatus } from '../enums/index.js';
+import { SessionLog } from '../models/SessionLog.js';
+import { MarketplacePost } from '../models/MarketplacePost.js';
+import { MarketplaceApplication } from '../models/MarketplaceApplication.js';
+import { UserRole, AccountStatus, LinkStatus, TuitionStatus } from '../enums/index.js';
+
 import {
   hashPassword,
   verifyPassword,
@@ -529,4 +533,93 @@ export class AuthService {
 
     return this.createAuthSession(user, userAgent, ip);
   }
+
+  /**
+   * Export all user data (GDPR compliance)
+   */
+  static async exportData(userId: string): Promise<Record<string, unknown>> {
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    const [tuitions, privateProfile, sessions, marketplacePosts, applications] =
+      await Promise.all([
+        Tuition.find({
+          $or: [
+            { teacherId: user._id },
+            { guardianId: user._id },
+            { 'guardianAccess.guardianUserId': user._id },
+          ],
+        }).lean(),
+        TeacherPrivateProfile.findOne({ userId: user._id }).lean(),
+        SessionLog.find({ teacherId: user._id }).lean(),
+        MarketplacePost.find({ authorId: user._id }).lean(),
+        MarketplaceApplication.find({ teacherId: user._id }).lean(),
+      ]);
+
+    return {
+      exportedAt: new Date().toISOString(),
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        roles: user.roles,
+        teacherProfile: user.teacherProfile,
+        guardianProfile: user.guardianProfile,
+        createdAt: user.createdAt,
+      },
+      privateProfile: privateProfile
+        ? {
+            whatsapp: privateProfile.whatsapp,
+            alternatePhone: privateProfile.alternatePhone,
+            fullAddress: privateProfile.fullAddress,
+            verificationDocsCount: privateProfile.verificationDocs?.length || 0,
+          }
+        : null,
+      tuitions,
+      sessions,
+      marketplacePosts,
+      applications,
+    };
+  }
+
+  /**
+   * Self-delete user account (anonymization and session revocation)
+   */
+  static async deleteAccount(userId: string): Promise<{ message: string }> {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Anonymize user records
+    user.name = 'Deactivated User';
+    user.email = undefined;
+    user.phone = undefined;
+    user.passwordHash = undefined;
+    user.accountStatus = AccountStatus.SUSPENDED;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    if (user.teacherProfile) {
+      user.teacherProfile.isPublic = false;
+      user.teacherProfile.bio = undefined;
+    }
+    await user.save();
+
+    // Invalidate all active refresh sessions
+    await RefreshSession.updateMany(
+      { userId: user._id },
+      { revokedAt: new Date() }
+    );
+
+    // Archive active tuitions
+    await Tuition.updateMany(
+      { teacherId: user._id, status: TuitionStatus.ACTIVE },
+      { status: TuitionStatus.ARCHIVED, deletedAt: new Date() }
+    );
+
+    return { message: 'Your account and personal data have been permanently deactivated.' };
+  }
 }
+

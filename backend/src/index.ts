@@ -14,6 +14,8 @@ import { tuitionRoutes } from './routes/tuition.routes.js';
 import { guardianRoutes } from './routes/guardian.routes.js';
 import { teacherRoutes } from './routes/teacher.routes.js';
 import { contactRoutes } from './routes/contact.routes.js';
+import { marketplaceRoutes } from './routes/marketplace.routes.js';
+import { adminRoutes } from './routes/admin.routes.js';
 
 const app = express();
 
@@ -53,6 +55,8 @@ app.use(`${env.API_PREFIX}/tuitions`, tuitionRoutes);
 app.use(`${env.API_PREFIX}/guardian`, guardianRoutes);
 app.use(`${env.API_PREFIX}/teachers`, teacherRoutes);
 app.use(`${env.API_PREFIX}/contact-requests`, contactRoutes);
+app.use(`${env.API_PREFIX}/marketplace`, marketplaceRoutes);
+app.use(`${env.API_PREFIX}/admin`, adminRoutes);
 
 // 7. Central Error Handler
 app.use(errorHandler);

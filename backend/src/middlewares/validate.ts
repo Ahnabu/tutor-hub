@@ -19,12 +19,22 @@ export const validateRequest = (schema: RequestValidationSchema) => {
 
       if (schema.query) {
         const sanitizedQuery = sanitizeInput(req.query);
-        req.query = await schema.query.parseAsync(sanitizedQuery);
+        const parsed = await schema.query.parseAsync(sanitizedQuery);
+        Object.defineProperty(req, 'query', {
+          value: parsed,
+          writable: true,
+          configurable: true,
+        });
       }
 
       if (schema.params) {
         const sanitizedParams = sanitizeInput(req.params);
-        req.params = await schema.params.parseAsync(sanitizedParams);
+        const parsed = await schema.params.parseAsync(sanitizedParams);
+        Object.defineProperty(req, 'params', {
+          value: parsed,
+          writable: true,
+          configurable: true,
+        });
       }
 
       next();

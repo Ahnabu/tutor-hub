@@ -80,4 +80,8 @@ router.post(
   AuthController.claimVerify
 );
 
+router.get('/export-data', authenticate, AuthController.exportData);
+router.post('/delete-account', authenticate, AuthController.deleteAccount);
+
 export const authRoutes = router;
+

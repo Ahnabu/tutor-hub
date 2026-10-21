@@ -3,7 +3,7 @@
 > **High-Performance Operations & Transparency SaaS for Private Tutors and Guardians in Bangladesh.**  
 > Built with Next.js 16 App Router, Express 5, TypeScript, MongoDB Replica Sets, and Tailwind CSS.
 
-[![CI Tests](https://img.shields.io/badge/Vitest%20Tests-45%2F45%20Passing-emerald?style=flat-square)](file:///d:/Antigravity_Work/TutorHub/backend)
+[![CI Tests](https://img.shields.io/badge/Vitest%20Tests-59%2F59%20Passing-emerald?style=flat-square)](file:///d:/Antigravity_Work/TutorHub/backend)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16%20(Turbopack)-black?style=flat-square&logo=next.js)](file:///d:/Antigravity_Work/TutorHub/frontend)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](file:///d:/Antigravity_Work/TutorHub)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=flat-square&logo=tailwindcss)](file:///d:/Antigravity_Work/TutorHub/frontend)
@@ -18,10 +18,11 @@
 | **Phase 1** | **Foundation & Security Matrix**<br>Argon2id auth, JWT refresh token rotation with reuse revocation, OTP verification, privacy DTOs, CSRF protection, and role guards. | **COMPLETED** ✅ | 25 Tests |
 | **Phase 2** | **Tuition Engine & "Next-Day Memory" Logger**<br>Multi-student tuition contracts, transactional cycle counters, automated Next-Day memory prefill, payment ledger, and cycle rollover. | **COMPLETED** ✅ | 34 Tests |
 | **Phase 3** | **Guardian Portal & Gated Profiles**<br>PIN-protected `/guardian/view/[token]`, multi-tutor `/guardian` dashboard, SEO `/teachers` directory, and privacy-gated `ContactAccessRequest` workflow. | **COMPLETED** ✅ | 45 Tests |
-| **Phase 4** | **Dual-Sided Marketplace & Admin Command Center**<br>Guardian tuition posting, teacher applications, admin verification queue, audit viewer, and compliance self-deletion. | *Next Phase* 🚀 | In Planning |
+| **Phase 4** | **Dual-Sided Marketplace & Admin Command Center**<br>Guardian tuition posting, teacher applications, mutual contact grants, admin verification queue, audit viewer, system configuration, and GDPR compliance. | **COMPLETED** ✅ | 59 Tests |
 
 > [!NOTE]
 > **Continuous Documentation Protocol**: At the completion of each phase, `README.md`, `PROJECT_CONTEXT.md`, and `docs/DEFERRED.md` are immediately updated and synchronized to reflect newly implemented features, endpoint contracts, test counts, and schema evolutions.
+
 
 
 ---
@@ -55,7 +56,23 @@
 - Mandatory Bangladeshi mobile numbers (`017XXXXXXXX`, `+88017XXXXXXXX`).
 - Centralized error formatting with actionable, human-meaningful `sonner` dark-theme toast notifications.
 
+### 6. Live Tuition Board & Dual-Sided Marketplace (`/marketplace` & `/marketplace/create`)
+- Parents and guardians post verified tuition requirements with student class/grade, subjects, preferred days, area, and monthly budget.
+- Verified tutors browse live openings with area and subject filter chips and submit direct pitches.
+- Guardians review applicants, inspect university backgrounds, and click **"Accept Tutor"** to automatically generate mutual `ContactGrant`s and unlock direct mobile/WhatsApp communication.
+
+### 7. Interactive Admin Command Center (`/admin`)
+- High-level platform KPIs: total teachers, verified ratio, active tuitions, completed sessions, and open marketplace posts.
+- **Teacher Verification Queue:** Inspect submitted university credentials, student IDs, and national IDs with one-click **Approve** or **Reject** (with direct tutor feedback).
+- **Tuition Audits:** Live inspection of active contracts, cycle progress, and payment status.
+- **System Controls:** Real-time platform maintenance mode toggle and guardian daily contact rate-limit configuration.
+
+### 8. GDPR Compliance & Privacy Self-Service
+- **Self-Service Data Export (`GET /api/v1/auth/export-data`):** Comprehensive JSON export of all personal profile records, tuitions, session logs, and marketplace activities.
+- **Account Self-Deletion (`POST /api/v1/auth/delete-account`):** Irreversible profile anonymization, active token revocation, and tuition archival.
+
 ---
+
 
 ## 🏗️ Architecture & Decoupling
 
@@ -168,13 +185,15 @@ cd backend
 npm test
 ```
 
-### Verified Test Suites (45/45 Passing):
+### Verified Test Suites (59/59 Passing):
 - **`src/tests/auth.test.ts`**: Happy-path register/login, OTP expiration, refresh rotation, family reuse revocation.
 - **`src/tests/tuition.test.ts`**: Tuition creation, schedule subdocs, cycle initialization, session logging with memory prefill, payment ledger, and cycle rollover.
 - **`src/tests/phase3.test.ts`**: Public teacher directory, PIN verification, 15-minute lockouts, sanitized guardian portal overview, and `ContactAccessRequest` approval grants.
+- **`src/tests/phase4.test.ts`**: Marketplace tuition requirements, tutor applications, mutual contact grants, admin KPI stats, teacher credential verification review, system maintenance configuration, GDPR data export, and account self-deletion.
 - **`src/tests/middleware.test.ts`**: Rate limiting, CSRF headers, Argon2id verification, and RBAC authorization matrix.
 - **`src/tests/models.test.ts`**: Schema indexes, partial filter uniqueness, and sensitive field exclusion (`select: false`).
 - **`src/tests/health.test.ts`**: Diagnostic `/healthz` and `/readyz` probes.
+
 
 ---
 

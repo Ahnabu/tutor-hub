@@ -3,6 +3,9 @@ import { AuthService } from '../services/auth.service.js';
 import { setAuthCookies, clearAuthCookies, REFRESH_TOKEN_COOKIE } from '../utils/cookies.js';
 import { toUserDTO } from '../dtos/user.dto.js';
 import { BadRequestError } from '../utils/errors.js';
+import { IUser } from '../models/User.js';
+import { env } from '../config/env.js';
+
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -177,4 +180,40 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * GET /api/v1/auth/export-data
+   */
+  static async exportData(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = req.user as IUser;
+      const data = await AuthService.exportData(user._id.toString());
+      res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/delete-account
+   */
+  static async deleteAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = req.user as IUser;
+      const result = await AuthService.deleteAccount(user._id.toString());
+
+      clearAuthCookies(res);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+

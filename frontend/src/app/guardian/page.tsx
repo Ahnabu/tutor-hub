@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
 import {
@@ -234,7 +236,7 @@ export default function GuardianDashboardPage() {
         </div>
 
         {/* SECTION 2: GATED CONTACT REQUESTS */}
-        <div>
+        <div className="mb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Phone className="h-4 w-4 text-emerald-400" />
@@ -335,9 +337,232 @@ export default function GuardianDashboardPage() {
             </div>
           )}
         </div>
+
+        {/* SECTION 3: MY TUITION BOARD POSTINGS */}
+        <GuardianMarketplacePostsSection />
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function GuardianMarketplacePostsSection() {
+  const [posts, setPosts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [selectedPostId, setSelectedPostId] = React.useState<string | null>(null);
+  const [applications, setApplications] = React.useState<any[]>([]);
+  const [loadingApps, setLoadingApps] = React.useState(false);
+
+  const fetchMyPosts = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/marketplace/my-posts');
+      if (res.data?.success) {
+        setPosts(res.data.data.posts || []);
+      }
+    } catch {
+      // quiet fail
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchMyPosts();
+  }, []);
+
+  const openApplicantsModal = async (postId: string) => {
+    try {
+      setSelectedPostId(postId);
+      setLoadingApps(true);
+      const res = await api.get(`/marketplace/posts/${postId}/applications`);
+      if (res.data?.success) {
+        setApplications(res.data.data.applications || []);
+      }
+    } catch {
+      // quiet fail
+    } finally {
+      setLoadingApps(false);
+    }
+  };
+
+  const handleAcceptApplication = async (appId: string) => {
+    try {
+      const res = await api.post(`/marketplace/applications/${appId}/respond`, {
+        action: 'ACCEPT',
+      });
+      if (res.data?.success) {
+        toast.success('Tutor application accepted! Direct contacts have been unlocked.');
+        if (selectedPostId) openApplicantsModal(selectedPostId);
+        fetchMyPosts();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Could not accept application.');
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-indigo-400" />
+          <span>My Tuition Board Postings</span>
+        </h2>
+        <Link
+          href="/marketplace/create"
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors"
+        >
+          + Post Requirement
+        </Link>
+      </div>
+
+      {loading ? (
+        <div className="p-6 text-center rounded-2xl bg-slate-900/40 border border-white/[0.06] text-xs text-slate-400">
+          Loading your postings...
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="p-6 text-center rounded-2xl bg-slate-900/40 border border-white/[0.06] text-xs text-slate-400">
+          You haven&apos;t posted any tuition requirements yet.{' '}
+          <Link href="/marketplace/create" className="text-indigo-400 hover:underline">
+            Post a requirement now
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {posts.map((p) => (
+            <div
+              key={p.id}
+              className="p-5 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    ৳{p.budgetAmount?.toLocaleString()} / mo
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold ${
+                      p.status === 'HIRED'
+                        ? 'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                        : p.status === 'CLOSED'
+                        ? 'bg-slate-800 text-slate-400 border-white/[0.06]'
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    }`}
+                  >
+                    {p.status}
+                  </span>
+                </div>
+
+                <h4 className="text-sm font-bold text-white mb-1">{p.title}</h4>
+                <p className="text-xs text-slate-400 mb-3">
+                  {p.location?.area} • {p.daysPerWeek} days/week
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                <span className="text-xs text-slate-400">
+                  {p.applicationCount} applicant(s)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openApplicantsModal(p.id)}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors"
+                >
+                  View Applicants
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Applicants Modal */}
+      {selectedPostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#0D1322] border border-white/[0.1] rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
+              <h3 className="text-base font-bold text-white">Tutor Applicants</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedPostId(null)}
+                className="text-xs text-slate-400 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              {loadingApps ? (
+                <p className="text-xs text-slate-400 text-center py-8">Loading applicants...</p>
+              ) : applications.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-8">
+                  No tutors have applied to this requirement yet.
+                </p>
+              ) : (
+                applications.map((app) => (
+                  <div
+                    key={app.id}
+                    className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.06] text-xs space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-white">{app.teacher?.name}</p>
+                        <p className="text-slate-400 text-[11px]">
+                          {app.teacher?.institution || 'Verified Tutor'} • {app.teacher?.department}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                          app.status === 'ACCEPTED'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : app.status === 'REJECTED'
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}
+                      >
+                        {app.status}
+                      </span>
+                    </div>
+
+                    <p className="text-slate-300 italic bg-slate-950/40 p-2.5 rounded-lg border border-white/[0.04]">
+                      "{app.message}"
+                    </p>
+
+                    {app.status === 'ACCEPTED' && app.teacher?.phone && (
+                      <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
+                        <span className="font-mono text-emerald-400 font-bold">
+                          {app.teacher.phone}
+                        </span>
+                        <a
+                          href={`https://wa.me/${app.teacher.phone.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] font-bold text-[#25D366] hover:underline"
+                        >
+                          Chat WhatsApp
+                        </a>
+                      </div>
+                    )}
+
+                    {app.status === 'PENDING' && (
+                      <div className="flex items-center justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptApplication(app.id)}
+                          className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors"
+                        >
+                          Accept Tutor & Unlock Contact
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

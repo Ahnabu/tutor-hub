@@ -31,7 +31,18 @@ export const Navbar: React.FC = () => {
               Directory
             </span>
           </Link>
+
+          <Link
+            href="/marketplace"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-emerald-400 transition-colors"
+          >
+            <span>Tuition Board</span>
+            <span className="px-1.5 py-0.2 rounded bg-indigo-500/10 text-indigo-400 font-mono text-[10px] border border-indigo-500/20">
+              Live Feed
+            </span>
+          </Link>
         </div>
+
 
         <div className="flex items-center gap-3">
           <ThemeToggle />

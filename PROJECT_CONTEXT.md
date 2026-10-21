@@ -229,3 +229,34 @@ npm run dev
   - 45/45 passing unit & integration tests in `backend/` (all 6 test files passing).
   - Clean Next.js 16 production build with 14 static and dynamic routes.
 
+## 9. Phase 4: Dual-Sided Marketplace, Admin Command Center & Compliance — COMPLETED
+- [x] **Marketplace Models & Endpoints (`/api/v1/marketplace`):**
+  - `POST /marketplace/posts`: Guardian creates tuition requirements with student class/grade, subjects, area, budget, and days/week.
+  - `GET /marketplace/posts`: Public feed with search (title/subject/area), Dhaka area filter chips, teaching mode, and budget ranges.
+  - `GET /marketplace/my-posts`: Guardian views their own tuition postings and applicant counts.
+  - `PATCH /marketplace/posts/:id/close`: Guardian closes post.
+  - `POST /marketplace/posts/:id/apply`: Teacher submits application pitch (enforcing 1 application per teacher per post).
+  - `GET /marketplace/my-applications`: Teacher tracks all submitted applications and statuses.
+  - `GET /marketplace/posts/:id/applications`: Guardian reviews applicants with university, bio, and experience credentials.
+  - `POST /marketplace/applications/:id/respond`: Guardian accepts/rejects applicants. Accepting creates a mutual `ContactGrant`, sets post to `HIRED`, and auto-rejects other pending applicants.
+- [x] **Admin Command Center (`/api/v1/admin` & `/admin`):**
+  - `GET /admin/stats`: Real-time KPI counters (total users, teachers, verified ratio, tuitions, sessions, marketplace posts).
+  - `GET /admin/verifications`: Teacher credential inspection queue with uploaded NID/student ID documents.
+  - `POST /admin/verifications/:teacherId/review`: One-click Approve or Reject (with feedback note) with immutable audit log recording.
+  - `GET /admin/tuitions`: Full tuition audit log with cycle progress, fee, and payment status.
+  - `GET /admin/config` & `PATCH /admin/config`: System maintenance mode toggle and guardian daily contact rate limits.
+  - `GET /admin/audit-logs`: Comprehensive system activity viewer.
+- [x] **GDPR Compliance & Account Lifecycle:**
+  - `GET /api/v1/auth/export-data`: Complete JSON data export of user profile, tuitions, sessions, and marketplace activity.
+  - `POST /api/v1/auth/delete-account`: Irreversible profile anonymization, active token revocation, and tuition archival.
+- [x] **Frontend Marketplace & Admin UI:**
+  - `/marketplace`: Public responsive tuition feed with area filters, search, and apply modal.
+  - `/marketplace/create`: Intuitive guardian requirement creation form.
+  - `/guardian`: Added "My Tuition Board Postings" section with applicant review drawer.
+  - `/admin`: Full administrator cockpit with metrics, verification approvals, tuition audits, and config.
+  - Navbar updated with "Tuition Board" link and dynamic Admin Hub badge.
+- [x] **Test & Build Status:**
+  - 59/59 passing unit and integration tests across 7 test files in `backend/` (`phase4.test.ts` added with 14 passing tests).
+  - Clean Next.js 16 production build (`npm run build`) with 16 static and dynamic routes.
+
+

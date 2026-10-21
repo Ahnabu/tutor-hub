@@ -22,9 +22,15 @@ The following features are purposefully deferred to future phases per the projec
 - Teacher verification document submission interface.
 - ContactAccessRequest workflow and audit entries.
 
-### Phase 4:
-- Anonymized marketplace feed & application shortlisting.
-- Admin verification queue and tuition dispute inspection viewer.
+### Phase 4 — COMPLETED:
+- Anonymized marketplace feed & application shortlisting (`/marketplace`).
+- Guardian requirement posting (`/marketplace/create`) & application acceptance workflow.
+- Admin verification queue and tuition inspection viewer (`/admin`).
 - Global system configuration and maintenance mode toggles.
 - Account self-deletion & data export (GDPR-style compliance).
+
+### Future Roadmap / V2 Backlog:
 - TOTP 2FA for administrative accounts.
+- Automated SMS gateway integration (e.g. SSL Wireless / BulkSMS BD).
+- PWA offline session queue and background sync.
+
