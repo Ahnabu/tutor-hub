@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -22,6 +22,13 @@ import {
   BookOpen,
   Send,
   MessageCircle,
+  Lock,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LogOut,
+  X,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface TuitionItem {
@@ -65,6 +72,7 @@ interface ContactRequestItem {
 
 export default function GuardianDashboardPage() {
   const { user } = useAuth();
+  const [isSecurityOpen, setIsSecurityOpen] = useState(false);
 
   // 1. Fetch Claimed Tuitions
   const { data: tuitionsData, isLoading: isTuitionsLoading } = useQuery<{
@@ -113,13 +121,24 @@ export default function GuardianDashboardPage() {
               </p>
             </div>
 
-            <Link
-              href="/teachers"
-              className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
-            >
-              <GraduationCap className="h-4 w-4" />
-              <span>Browse Tutors Directory</span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSecurityOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer"
+              >
+                <Lock className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Account Security</span>
+              </button>
+
+              <Link
+                href="/teachers"
+                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span>Browse Tutors Directory</span>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -342,6 +361,11 @@ export default function GuardianDashboardPage() {
         <GuardianMarketplacePostsSection />
       </main>
 
+      {/* Security & Password Modal */}
+      {isSecurityOpen && (
+        <GuardianSecurityModal onClose={() => setIsSecurityOpen(false)} />
+      )}
+
       <BottomNav />
     </div>
   );
@@ -562,7 +586,234 @@ function GuardianMarketplacePostsSection() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
+// ==============================================================================
+// GUARDIAN ACCOUNT SECURITY MODAL (Internal Box-Level Scrolling)
+// ==============================================================================
+function GuardianSecurityModal({ onClose }: { onClose: () => void }) {
+  const { user } = useAuth();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [loggingOutAll, setLoggingOutAll] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New password and confirmation do not match.');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+
+      toast.success('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      onClose();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      toast.error(msg || 'Failed to change password. Please verify your current password.');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleLogoutAll = async () => {
+    setLoggingOutAll(true);
+    try {
+      await api.post('/auth/logout-all');
+      toast.success('Signed out of all other devices successfully.');
+    } catch {
+      toast.error('Could not sign out of other devices.');
+    } finally {
+      setLoggingOutAll(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-hidden">
+      <div className="w-full max-w-lg bg-slate-900 border border-white/[0.1] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-fadeIn">
+        {/* Fixed Header */}
+        <div className="p-5 border-b border-white/[0.08] flex items-center justify-between shrink-0 bg-slate-900">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">Guardian Account Security</h3>
+              <p className="text-xs text-slate-400">Configure password and remote device sessions</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Body - SCROLL ON THE BOX */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 overscroll-contain">
+          {/* Account Details Card */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-2">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              Profile Information
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-slate-500 block">Name:</span>
+                <span className="font-semibold text-white">{user?.name}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Email:</span>
+                <span className="font-semibold text-emerald-400 truncate block">{user?.email || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Phone:</span>
+                <span className="font-semibold text-white">{user?.phone || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Role:</span>
+                <span className="font-mono text-emerald-400 font-bold">GUARDIAN</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Change Password Form */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-4">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-emerald-400" />
+              <h4 className="text-sm font-bold text-white">Change Password</h4>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    required
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showCurrentPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  New Password (Min. 8 characters)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new secure password"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showNewPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                    aria-label="Toggle confirm password visibility"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={changingPassword || !currentPassword || !newPassword}
+                className="w-full h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {changingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                <span>Update Password</span>
+              </button>
+            </form>
+          </div>
+
+          {/* Remote Sessions */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-2.5">
+            <div className="flex items-center gap-2">
+              <LogOut className="h-4 w-4 text-amber-400" />
+              <h4 className="text-xs font-bold text-white">Remote Device Sessions</h4>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Sign out from all other active sessions and revoke existing refresh tokens across all devices.
+            </p>
+            <button
+              type="button"
+              onClick={handleLogoutAll}
+              disabled={loggingOutAll}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer disabled:opacity-50"
+            >
+              {loggingOutAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+              <span>Sign Out of Other Devices</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
