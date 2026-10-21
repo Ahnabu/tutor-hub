@@ -125,13 +125,17 @@ npm run dev
   - [x] `SystemConfig.ts` (system-wide tunables)
 - [x] Unit test verification in `backend/src/tests/models.test.ts` (8/8 tests passing)
 
-### Step 2: Backend Core Security Middleware & Utility Layer
-- [ ] Strict Zod request validator (`validateRequest`) with `.strict()` schemas.
-- [ ] Recursive NoSQL injection key sanitizer.
-- [ ] JWT & Cookie helper (access token 15m, refresh token 7d with SHA-256 hash).
-- [ ] Authentication middleware (`authenticate`), role-based access control (`authorizeRoles`), and user status check (`tokenVersion`).
-- [ ] Role-specific DTO mappers (`toUserDTO`, `toTeacherPublicDTO`, etc.) guaranteeing zero PII leaks.
-- [ ] Email service with Mailpit worker and responsive HTML templates (OTP, reset, claim).
+### Step 2: Backend Core Security Middleware & Utility Layer — COMPLETED
+- [x] Strict Zod request validator (`validateRequest`) with `.strict()` schemas.
+- [x] Recursive NoSQL injection key sanitizer (`sanitizeInput` dropping `$` and `.`).
+- [x] JWT & Cookie helper (access token 15m, refresh token 7d with SHA-256 hash, HTTP-only cookies).
+- [x] Authentication middleware (`authenticate`), role-based access control (`authorizeRoles`), and user status check (`tokenVersion`).
+- [x] CSRF protection middleware (`csrfProtection` enforcing `X-Requested-With: tutorhub`).
+- [x] Centralized error handler (`errorHandler`) with consistent error envelopes.
+- [x] Role-specific DTO mappers (`toUserDTO`, `toPublicTeacherDTO`) guaranteeing zero PII leaks.
+- [x] Email service with Mailpit worker and responsive HTML templates (OTP, reset, claim).
+- [x] Resource ownership middleware pattern (`loadOwnedTuition`).
+- [x] Comprehensive unit & integration tests (`backend/src/tests/middleware.test.ts` - 18/18 tests passing).
 
 ### Step 3: Auth Endpoints & Admin Seeder
 - [ ] Auth endpoints: Register (Teacher/Guardian), Verify Email (OTP), Resend OTP, Login, Refresh (with family reuse detection), Logout, Logout-All, Forgot/Reset Password, `/auth/me`.
