@@ -370,31 +370,33 @@ export default function Home() {
             </p>
 
             {/* Role Switcher Pill */}
-            <div className="inline-flex p-1.5 rounded-2xl bg-slate-900 border border-white/[0.08] mt-2">
+            <div className="flex sm:inline-flex p-1 sm:p-1.5 rounded-2xl bg-slate-900 border border-white/[0.08] mt-2 w-full max-w-xs sm:max-w-none sm:w-auto mx-auto">
               <button
                 type="button"
                 onClick={() => setActiveWorkflowTab('teacher')}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                className={`flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 ${
                   activeWorkflowTab === 'teacher'
                     ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <GraduationCap className="h-4 w-4" />
-                <span>For Private Tutors</span>
+                <GraduationCap className="h-4 w-4 shrink-0" />
+                <span className="sm:hidden whitespace-nowrap">For Tutors</span>
+                <span className="hidden sm:inline whitespace-nowrap">For Private Tutors</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveWorkflowTab('guardian')}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                className={`flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 ${
                   activeWorkflowTab === 'guardian'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <ShieldCheck className="h-4 w-4" />
-                <span>For Parents & Guardians</span>
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="sm:hidden whitespace-nowrap">For Parents</span>
+                <span className="hidden sm:inline whitespace-nowrap">For Parents & Guardians</span>
               </button>
             </div>
           </div>

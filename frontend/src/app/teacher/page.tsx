@@ -1574,47 +1574,47 @@ function TeacherProfileModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-px">
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-px scrollbar-none">
             <button
               type="button"
               onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap shrink-0 ${
                 activeTab === 'profile'
                   ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
               }`}
             >
-              <User className="h-3.5 w-3.5" />
-              <span>Tutor Profile</span>
+              <User className="h-3.5 w-3.5 shrink-0" />
+              <span className="whitespace-nowrap">Tutor Profile</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('verification')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap shrink-0 ${
                 activeTab === 'verification'
                   ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
               }`}
             >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Verification</span>
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+              <span className="whitespace-nowrap">Verification</span>
               {verificationStatus === 'VERIFIED' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
               )}
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('security')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-semibold rounded-t-xl transition-all cursor-pointer border-b-2 whitespace-nowrap shrink-0 ${
                 activeTab === 'security'
                   ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
               }`}
             >
-              <Lock className="h-3.5 w-3.5" />
-              <span>Security & Password</span>
+              <Lock className="h-3.5 w-3.5 shrink-0" />
+              <span className="whitespace-nowrap">Security & Password</span>
             </button>
           </div>
         </div>
@@ -1742,13 +1742,13 @@ function TeacherProfileModal({ onClose }: { onClose: () => void }) {
           {activeTab === 'verification' && (
             <div className="space-y-6">
               {/* Verification Status Banner */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-white/[0.08] flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-slate-950 border border-white/[0.08] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                     <UserCheck className="h-5 w-5" />
                   </div>
-                  <div>
-                    <span className="text-xs font-bold text-white block">Tutor Verification Badge</span>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-white block truncate">Tutor Verification Badge</span>
                     <span className="text-[11px] text-slate-400">
                       Status:{' '}
                       <strong
@@ -1767,17 +1767,17 @@ function TeacherProfileModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 {verificationStatus === 'VERIFIED' ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Verified Tutor
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono whitespace-nowrap shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>Verified Tutor</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-mono">
-                    <span className="relative flex h-2 w-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-mono whitespace-nowrap shrink-0">
+                    <span className="relative flex h-2 w-2 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                     </span>
-                    Under Review
+                    <span>Under Review</span>
                   </span>
                 )}
               </div>

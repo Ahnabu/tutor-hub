@@ -58,7 +58,7 @@ export default function RegisterPage() {
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center p-4 py-12">
-        <div className="w-full max-w-md bg-slate-900/60 border border-white/[0.08] backdrop-blur-2xl rounded-2xl p-6 sm:p-8 shadow-2xl">
+        <div className="w-full max-w-md bg-slate-900/60 border border-white/[0.08] backdrop-blur-2xl rounded-2xl p-5 sm:p-8 shadow-2xl">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-white tracking-tight">Create your account</h1>
             <p className="text-sm text-slate-400 mt-1">
@@ -67,30 +67,32 @@ export default function RegisterPage() {
           </div>
 
           {/* Role Choice Selector */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950/60 border border-white/[0.06] rounded-xl mb-6">
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950/60 border border-white/[0.06] rounded-xl mb-6">
             <button
               type="button"
               onClick={() => setRole('TEACHER')}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 role === 'TEACHER'
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <GraduationCap className="h-4 w-4" />
-              <span>I am a Tutor</span>
+              <GraduationCap className="h-4 w-4 shrink-0" />
+              <span className="sm:hidden whitespace-nowrap">Tutor</span>
+              <span className="hidden sm:inline whitespace-nowrap">I am a Tutor</span>
             </button>
             <button
               type="button"
               onClick={() => setRole('GUARDIAN')}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 role === 'GUARDIAN'
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Users className="h-4 w-4" />
-              <span>I am a Guardian</span>
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="sm:hidden whitespace-nowrap">Guardian</span>
+              <span className="hidden sm:inline whitespace-nowrap">I am a Guardian</span>
             </button>
           </div>
 

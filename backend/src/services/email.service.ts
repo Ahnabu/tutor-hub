@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 import { EmailOutbox } from '../models/EmailOutbox.js';
 import { EmailOutboxStatus } from '../enums/index.js';
@@ -125,6 +126,7 @@ export class EmailWorker {
 
   static async processOutbox(): Promise<void> {
     if (this.isProcessing) return;
+    if (mongoose.connection.readyState !== 1) return;
     this.isProcessing = true;
 
     try {

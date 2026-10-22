@@ -1,0 +1,46 @@
+# TutorHub Bangladesh — Full AI System Context & Specification
+
+## 1. System Overview
+TutorHub is an end-to-end tuition lifecycle SaaS and verified tutor network operating in Bangladesh. It bridges university students providing private tuition with guardians seeking trusted academic mentors for their children.
+
+## 2. Core Entities & Concepts
+
+### Tuition Cycle
+In Bangladesh, private tuition is traditionally billed either by monthly fixed days (e.g. 12 classes / month) or weekly frequency (e.g. 3 days / week).
+- Each class logged counts towards `dayCount` of the current cycle.
+- Once completed, the tutor triggers cycle completion, which automatically generates a verified digital invoice/receipt.
+- Guardians receive a secure, passwordless magic link to their student portal to approve milestone cycles.
+
+### Marketplace (Tuition Board)
+- Guardians post postings specifying:
+  - Class/Grade (Class 1 through HSC, A-Levels, O-Levels)
+  - Curriculum (Bangla Medium NCTB, English Version, Edexcel, Cambridge)
+  - Subjects (e.g., Higher Math, Physics, Chemistry, Biology, Accounting)
+  - Location/Area (Dhanmondi, Uttara, Mirpur, Bashundhara, etc.)
+  - Teaching Mode (In-Person Home Tutoring, Online Tutoring, Hybrid)
+  - Schedule Basis (Days per week or Days per month)
+  - Monthly Budget in Bangladeshi Taka (BDT)
+  - Preferred Teacher Gender (Any, Female Only, Male Only)
+- Verified university teachers apply with personalized pitch messages.
+- Zero agency fees are charged to teachers or parents.
+
+### Verification System
+- Teachers undergo a multi-step background credential check:
+  - University Student ID card upload
+  - National ID (NID) or Birth Certificate document upload
+  - Cloudinary-backed document pipeline
+  - Admin verification badge granting verified status
+
+## 3. SEO & Discoverability Highlights
+- Schema.org Structured Data: `EducationalOrganization`, `JobPosting`, `Person` (Tutor)
+- Server-side rendered pages with OpenGraph, Twitter Cards, Canonical URLs
+- Multi-viewport accessibility with minimum 320px support
+- AI-friendly robots.txt allowing OpenAI GPTBot, ClaudeBot, PerplexityBot, and Google-Extended
+
+## 4. Security & Scalability Controls
+- Transport Security: HSTS (Strict-Transport-Security) with preload
+- XSS Prevention: Strict CSP, X-Content-Type-Options: nosniff
+- Clickjacking Prevention: X-Frame-Options: DENY
+- Rate Limiting: Tiered IP-based throttling across global, auth, and upload routes
+- Connection Pool: Mongoose connection pooling configured with maxPoolSize=100
+- Audit Trails: Immutable SessionLogs and CycleHistory records

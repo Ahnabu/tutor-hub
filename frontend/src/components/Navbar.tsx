@@ -88,11 +88,11 @@ export const Navbar: React.FC = () => {
             </Link>
           </div>
 
-          {/* Dynamic Breadcrumbs (Visible on Mobile & Desktop subpages) */}
+          {/* Dynamic Breadcrumbs (Visible on Desktop for clean, consistent mobile navbar) */}
           {breadcrumbs && (
             <nav
               aria-label="Breadcrumb navigation"
-              className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 truncate max-w-[90px] sm:max-w-none"
+              className="hidden md:flex items-center gap-1.5 text-xs text-slate-400"
             >
               <span className="text-slate-600">|</span>
               {breadcrumbs.map((crumb, index) => {
@@ -101,7 +101,7 @@ export const Navbar: React.FC = () => {
                   <React.Fragment key={crumb.href}>
                     {index > 0 && <ChevronRight className="h-3 w-3 text-slate-600 shrink-0" />}
                     {isLast ? (
-                      <span className="text-slate-200 font-semibold truncate">{crumb.label}</span>
+                      <span className="text-slate-200 font-semibold">{crumb.label}</span>
                     ) : (
                       <Link
                         href={crumb.href}

@@ -1,0 +1,37 @@
+# TutorHub Bangladesh — Operations & Memory Platform for Private Tutors
+
+> TutorHub is the modern operations platform, tuition cycle tracking SaaS, and verified university tutor marketplace tailored specifically for private tutors and guardians across Bangladesh.
+
+## Core Value Proposition
+- **Cycle Memory & Attendance Tracking**: Solves the #1 friction in Bangladeshi private tutoring—forgetting whether today is class 7 or class 8 of a 12-class cycle.
+- **Zero Commission Matching**: Parents post tuition requirements for free; verified university tutors (BUET, DU, DMC, NSU, IBA) connect directly with guardians with zero commission deductions.
+- **Instant Verified Credentials**: Tutors upload government NID / birth certificates and university student ID cards for background verification.
+- **Transparent Guardian Portal**: Tokenized, friction-free portal where parents review completed cycle milestones, salary receipts, and syllabus progression in real-time.
+
+## Key Public URLs
+- [Home & Platform Overview](https://tutorhub.com.bd/): Introduction to TutorHub, guided tour, and interactive features.
+- [Tuition Requirement Board](https://tutorhub.com.bd/marketplace): Live directory of verified parent tuition postings across Dhaka and nationwide.
+- [Post a Tuition Requirement](https://tutorhub.com.bd/marketplace/create): Portal for guardians to submit requirements with flexible days-per-week or days-per-month schedules.
+- [Verified Tutors Directory](https://tutorhub.com.bd/teachers): Search verified university mentors by subject, area, and curriculum.
+
+## Supported Curricula & Mediums
+- Bangla Medium (National Curriculum and Textbook Board - NCTB)
+- English Version (NCTB)
+- English Medium (Edexcel International GCSE / IAL)
+- English Medium (Cambridge CAIE O-Level / A-Level)
+- Madrasah Board (Dakhil & Alim)
+
+## Locations Served
+- Major Dhaka hubs: Dhanmondi, Gulshan, Banani, Uttara, Mirpur, Mohammadpur, Badda, Bashundhara R/A, Lalmatia, Shantinagar, Khilgaon, Old Dhaka.
+- Nationwide online tutoring across Chittagong, Sylhet, Rajshahi, Khulna, and all divisions.
+
+## Machine-Readable Endpoints (JSON)
+- Marketplace Open Posts: `GET /api/marketplace/posts`
+- Public Teacher Directory: `GET /api/teachers`
+- Teacher Public Profile: `GET /api/teachers/:slug`
+
+## Security & Verification Standards
+- Argon2 password hashing
+- HttpOnly JWT access & refresh token rotation
+- CSRF protection on mutation requests
+- Strict Rate Limiting (express-rate-limit) to thwart brute-force & credential stuffing
