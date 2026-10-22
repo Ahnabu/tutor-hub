@@ -69,6 +69,7 @@ export default function LoginPage() {
               <input
                 type="text"
                 required
+                autoComplete="username"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="you@example.com or +8801XXXXXXXXX"
@@ -92,6 +93,7 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

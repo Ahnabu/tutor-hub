@@ -121,11 +121,11 @@ export default function GuardianDashboardPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setIsSecurityOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2 border border-white/[0.08] transition-all cursor-pointer"
               >
                 <Lock className="h-3.5 w-3.5 text-emerald-400" />
                 <span>Account Security</span>
@@ -133,7 +133,7 @@ export default function GuardianDashboardPage() {
 
               <Link
                 href="/teachers"
-                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all text-center"
               >
                 <GraduationCap className="h-4 w-4" />
                 <span>Browse Tutors Directory</span>
@@ -479,18 +479,18 @@ function GuardianMarketplacePostsSection() {
 
                 <h4 className="text-sm font-bold text-white mb-1">{p.title}</h4>
                 <p className="text-xs text-slate-400 mb-3">
-                  {p.location?.area} • {p.daysPerWeek} days/week
+                  {p.location?.area} • {p.daysPerWeek ? `${p.daysPerWeek} days/week` : p.targetDaysPerMonth ? `${p.targetDaysPerMonth} days/month` : ''}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                <span className="text-xs text-slate-400">
+              <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                <span className="text-xs text-slate-400 whitespace-nowrap">
                   {p.applicationCount} applicant(s)
                 </span>
                 <button
                   type="button"
                   onClick={() => openApplicantsModal(p.id)}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors"
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors whitespace-nowrap shrink-0"
                 >
                   View Applicants
                 </button>

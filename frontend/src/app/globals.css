@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Light Theme (Alabaster & Frosted White) */
   --bg-canvas: #f8fafc;
-  --bg-surface: rgba(255, 255, 255, 0.75);
-  --bg-surface-elevated: rgba(255, 255, 255, 0.9);
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
   --border-glass: rgba(15, 23, 42, 0.08);
   --text-primary: #0f172a;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
 
   /* Semantic Accents */
   --accent-emerald: #059669;
@@ -46,6 +48,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Ensure buttons keep text on a single line */
+button,
+.btn {
+  white-space: nowrap;
+}
+
 /* Glassmorphic Surface Utilities */
 .glass-panel {
   background: var(--bg-surface);
@@ -59,11 +67,140 @@ body {
   border: 1px solid var(--border-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
 }
 
 /* Touch targets and mobile helpers */
 .touch-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Complete Light & Dark Theme Adaptations                                     */
+/* -------------------------------------------------------------------------- */
+html:not(.dark) {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Light Mode Canvas & Container Overrides */
+html:not(.dark) body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) [class*="bg-[#090D16]"],
+html:not(.dark) .min-h-screen {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Light Mode Navigation and Header */
+html:not(.dark) header {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Light Mode Cards & Surfaces */
+html:not(.dark) [class*="bg-slate-900"],
+html:not(.dark) [class*="bg-slate-950"] {
+  background-color: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+html:not(.dark) .bg-slate-950\/50,
+html:not(.dark) .bg-slate-950\/60,
+html:not(.dark) .bg-slate-950\/70,
+html:not(.dark) .bg-slate-950\/80,
+html:not(.dark) .bg-slate-950\/90 {
+  background-color: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-900\/70,
+html:not(.dark) .bg-slate-900\/80,
+html:not(.dark) .bg-slate-900\/85,
+html:not(.dark) .bg-slate-900\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+}
+
+/* Light Mode Mobile Bottom Navigation */
+html:not(.dark) nav[aria-label="Mobile Navigation"] > div {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) nav[aria-label="Mobile Navigation"] a {
+  color: #475569;
+}
+
+html:not(.dark) nav[aria-label="Mobile Navigation"] a.text-emerald-400 {
+  color: #059669 !important;
+}
+
+/* Light Mode Typography */
+html:not(.dark) .text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .text-slate-300 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .text-slate-100 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .border-white\/\[0\.04\],
+html:not(.dark) .border-white\/\[0\.06\],
+html:not(.dark) .border-white\/\[0\.08\],
+html:not(.dark) .border-white\/\[0\.1\] {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Light Mode Footer */
+html:not(.dark) footer {
+  background-color: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: #475569 !important;
+}
+
+/* Light Mode Form Inputs */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light Mode Modal Overlays */
+html:not(.dark) .bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }

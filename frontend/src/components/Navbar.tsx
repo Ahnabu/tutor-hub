@@ -56,7 +56,7 @@ export const Navbar: React.FC = () => {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
               <GraduationCap className="h-5 w-5 text-slate-950 stroke-[2.2]" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white font-sans hidden sm:inline-block">
+            <span className="text-base sm:text-xl font-bold tracking-tight text-white font-sans inline-block">
               Tutor<span className="text-emerald-400">Hub</span>
             </span>
           </Link>
@@ -92,9 +92,9 @@ export const Navbar: React.FC = () => {
           {breadcrumbs && (
             <nav
               aria-label="Breadcrumb navigation"
-              className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 truncate max-w-[220px] sm:max-w-none"
+              className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 truncate max-w-[90px] sm:max-w-none"
             >
-              <span className="hidden sm:inline-block text-slate-600">|</span>
+              <span className="text-slate-600">|</span>
               {breadcrumbs.map((crumb, index) => {
                 const isLast = index === breadcrumbs.length - 1;
                 return (

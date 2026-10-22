@@ -181,7 +181,7 @@ export default function Home() {
           </div>
 
           {/* Main Hero Heading */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.15]">
+          <h1 className="text-2xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.15]">
             Where Dedicated Tutors & Caring Guardians Connect with{' '}
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
               Total Clarity.
@@ -199,27 +199,27 @@ export default function Home() {
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
             <Link
               href="/register"
-              className="w-full sm:w-auto h-12 px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all active:scale-[0.99]"
+              className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all active:scale-[0.99] whitespace-nowrap"
             >
-              <span>Get Started Free</span>
-              <ArrowRight className="h-5 w-5" />
+              <span className="whitespace-nowrap">Get Started Free</span>
+              <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
 
             <button
               type="button"
               onClick={() => openTourManual('teacher')}
-              className="w-full sm:w-auto h-12 px-6 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 border border-white/[0.1] backdrop-blur-xl transition-all cursor-pointer shadow-lg active:scale-[0.99]"
+              className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2.5 border border-white/[0.1] backdrop-blur-xl transition-all cursor-pointer shadow-lg active:scale-[0.99] whitespace-nowrap"
             >
-              <Sparkles className="h-4 w-4 text-emerald-400 animate-spin-slow" />
-              <span>Take Guided Tour (60s)</span>
+              <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span className="whitespace-nowrap">Take Guided Tour (60s)</span>
             </button>
 
             <Link
               href="/marketplace"
-              className="w-full sm:w-auto h-12 px-6 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white font-medium text-sm sm:text-base flex items-center justify-center gap-2 border border-white/[0.08] transition-all"
+              className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 border border-white/[0.08] transition-all whitespace-nowrap"
             >
-              <ShoppingBag className="h-4 w-4 text-indigo-400" />
-              <span>Live Tuition Board</span>
+              <ShoppingBag className="h-4 w-4 text-indigo-400 shrink-0" />
+              <span className="whitespace-nowrap">Live Tuition Board</span>
             </Link>
           </div>
 
@@ -623,8 +623,8 @@ export default function Home() {
         {/* SECTION 6: BOTTOM CALL TO ACTION */}
         {/* ==================================================================== */}
         <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-emerald-600/20 via-slate-900/90 to-indigo-600/20 border border-white/[0.1] backdrop-blur-2xl text-center space-y-6 shadow-2xl">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <div className="p-5 sm:p-12 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-600/20 via-slate-900/90 to-indigo-600/20 border border-white/[0.1] backdrop-blur-2xl text-center space-y-5 sm:space-y-6 shadow-2xl">
+            <h2 className="text-xl sm:text-4xl font-extrabold text-white tracking-tight">
               Ready to Experience Intelligent Tuition Management?
             </h2>
             <p className="text-xs sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
@@ -632,20 +632,20 @@ export default function Home() {
               verifiable cycle transparency, and zero-fee matching.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 w-full max-w-md mx-auto">
               <Link
                 href="/register"
-                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+                className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all whitespace-nowrap"
               >
-                <span>Create Free Account</span>
-                <ArrowRight className="h-4 w-4" />
+                <span className="whitespace-nowrap">Create Free Account</span>
+                <ArrowRight className="h-4 w-4 shrink-0" />
               </Link>
               <Link
                 href="/teachers"
-                className="w-full sm:w-auto h-12 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm flex items-center justify-center gap-2 border border-white/[0.08] transition-all"
+                className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-white/[0.08] transition-all whitespace-nowrap"
               >
-                <GraduationCap className="h-4 w-4 text-emerald-400" />
-                <span>Browse Tutors Directory</span>
+                <GraduationCap className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span className="whitespace-nowrap">Browse Tutors Directory</span>
               </Link>
             </div>
           </div>
@@ -655,48 +655,51 @@ export default function Home() {
       {/* ==================================================================== */}
       {/* INTERACTIVE GUIDED INTRODUCTION TOUR MODAL (FIRST VISIT / REPLAY) */}
       {/* ==================================================================== */}
+      {/* ==================================================================== */}
+      {/* INTERACTIVE GUIDED INTRODUCTION TOUR MODAL (FIRST VISIT / REPLAY) */}
+      {/* ==================================================================== */}
       {isTourOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-hidden animate-fadeIn">
-          <div className="w-full max-w-xl bg-slate-900 border border-emerald-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto space-y-6 relative">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2.5 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-fadeIn">
+          <div className="w-full max-w-xl bg-slate-900 border border-emerald-500/30 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-2xl flex flex-col max-h-[calc(100dvh-28px)] relative">
             {/* Modal Close Button */}
             <button
               type="button"
               onClick={closeTour}
-              className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer z-10"
               aria-label="Close guided tour"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Tour Header */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-mono font-semibold mb-2">
-                <Sparkles className="h-3.5 w-3.5" />
+            <div className="pr-8 shrink-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] sm:text-[11px] font-mono font-semibold mb-1 sm:mb-2">
+                <Sparkles className="h-3 w-3" />
                 <span>Guided Introduction</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
                 Welcome to TutorHub!
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
                 Choose your role to see how TutorHub transforms your tuition experience:
               </p>
             </div>
 
             {/* Role Track Selector */}
-            <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-950 border border-white/[0.06]">
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl sm:rounded-2xl bg-slate-950 border border-white/[0.06] shrink-0 my-2">
               <button
                 type="button"
                 onClick={() => {
                   setTourRole('teacher');
                   setTourStep(0);
                 }}
-                className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                className={`py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   tourRole === 'teacher'
                     ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <GraduationCap className="h-4 w-4" />
+                <GraduationCap className="h-3.5 w-3.5" />
                 <span>I am a Tutor</span>
               </button>
 
@@ -706,70 +709,72 @@ export default function Home() {
                   setTourRole('guardian');
                   setTourStep(0);
                 }}
-                className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                className={`py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   tourRole === 'guardian'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <ShieldCheck className="h-4 w-4" />
+                <ShieldCheck className="h-3.5 w-3.5" />
                 <span>I am a Guardian</span>
               </button>
             </div>
 
-            {/* Current Step Content Card */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-white/[0.08] space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-emerald-400">
-                  {currentSteps[tourStep].badge}
-                </span>
+            {/* Scrollable Step Content Card */}
+            <div className="overflow-y-auto pr-0.5 space-y-3 my-1 flex-1 min-h-0">
+              <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-white/[0.08] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] sm:text-xs font-mono font-bold text-emerald-400">
+                    {currentSteps[tourStep].badge}
+                  </span>
 
-                <div className="flex items-center gap-1.5">
-                  {currentSteps.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setTourStep(i)}
-                      className={`h-2 rounded-full transition-all cursor-pointer ${
-                        tourStep === i
-                          ? 'w-6 bg-emerald-400'
-                          : 'w-2 bg-slate-700 hover:bg-slate-600'
-                      }`}
-                      aria-label={`Jump to step ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  {React.createElement(currentSteps[tourStep].icon, { className: 'h-6 w-6' })}
+                  <div className="flex items-center gap-1.5">
+                    {currentSteps.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setTourStep(i)}
+                        className={`h-2 rounded-full transition-all cursor-pointer ${
+                          tourStep === i
+                            ? 'w-5 sm:w-6 bg-emerald-400'
+                            : 'w-2 bg-slate-700 hover:bg-slate-600'
+                        }`}
+                        aria-label={`Jump to step ${i + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-white">
-                    {currentSteps[tourStep].title}
-                  </h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {currentSteps[tourStep].description}
-                  </p>
-                </div>
-              </div>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                    {React.createElement(currentSteps[tourStep].icon, { className: 'h-4 w-4 sm:h-6 sm:w-6' })}
+                  </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-white/[0.06] text-[11px] text-emerald-300 flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span>{currentSteps[tourStep].highlight}</span>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h3 className="text-xs sm:text-base font-bold text-white leading-snug">
+                      {currentSteps[tourStep].title}
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+                      {currentSteps[tourStep].description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-slate-900/90 border border-white/[0.06] text-[10px] sm:text-[11px] text-emerald-300 flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>{currentSteps[tourStep].highlight}</span>
+                </div>
               </div>
             </div>
 
             {/* Stepper Navigation Buttons */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.08] shrink-0 gap-2">
               <button
                 type="button"
                 onClick={closeTour}
-                className="text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer whitespace-nowrap py-1"
               >
-                Skip Walkthrough
+                Skip Tour
               </button>
 
               <div className="flex items-center gap-2">
@@ -777,7 +782,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setTourStep(tourStep - 1)}
-                    className="h-10 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+                    className="h-8 sm:h-10 px-3 sm:px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] sm:text-xs transition-colors cursor-pointer"
                   >
                     Previous
                   </button>
@@ -787,19 +792,19 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setTourStep(tourStep + 1)}
-                    className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                    className="h-8 sm:h-10 px-3.5 sm:px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] sm:text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap"
                   >
                     <span>Next Step</span>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 ) : (
                   <Link
                     href={tourRole === 'teacher' ? '/register' : '/teachers'}
                     onClick={closeTour}
-                    className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all"
+                    className="h-8 sm:h-10 px-3.5 sm:px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] sm:text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all whitespace-nowrap"
                   >
                     <span>{tourRole === 'teacher' ? 'Start as Tutor' : 'Explore Tutors'}</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 )}
               </div>
@@ -809,31 +814,35 @@ export default function Home() {
       )}
 
       {/* Semantic Footer */}
-      <footer className="border-t border-white/[0.08] py-10 bg-slate-950/80 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs">
-              TH
+      <footer className="border-t border-white/[0.08] pt-8 pb-28 sm:py-10 bg-slate-950/90 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-4 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-6 w-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs">
+                TH
+              </div>
+              <span className="text-slate-300 font-semibold whitespace-nowrap">TutorHub Bangladesh</span>
             </div>
-            <span className="text-slate-400 font-semibold">TutorHub Bangladesh</span>
-            <span>•</span>
-            <span>Empowering private educators & guardians.</span>
+            <span className="hidden sm:inline text-slate-600">•</span>
+            <span className="text-slate-400 text-xs">
+              Empowering private educators &amp; guardians across Bangladesh.
+            </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-slate-400">
-            <Link href="/teachers" className="hover:text-emerald-400 transition-colors">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-400">
+            <Link href="/teachers" className="hover:text-emerald-400 transition-colors whitespace-nowrap py-1">
               Find Tutors
             </Link>
-            <Link href="/marketplace" className="hover:text-emerald-400 transition-colors">
+            <Link href="/marketplace" className="hover:text-emerald-400 transition-colors whitespace-nowrap py-1">
               Tuition Board
             </Link>
-            <Link href="/profile" className="hover:text-emerald-400 transition-colors">
+            <Link href="/profile" className="hover:text-emerald-400 transition-colors whitespace-nowrap py-1">
               Profile
             </Link>
             <button
               type="button"
               onClick={() => openTourManual('teacher')}
-              className="hover:text-emerald-400 transition-colors cursor-pointer"
+              className="hover:text-emerald-400 transition-colors cursor-pointer whitespace-nowrap py-1"
             >
               Platform Tour
             </button>

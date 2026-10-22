@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
+import { BottomNav } from '@/components/BottomNav';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { toast } from 'sonner';
@@ -37,6 +38,7 @@ interface IMarketplacePostItem {
     mode: 'IN_PERSON' | 'ONLINE' | 'HYBRID';
   };
   daysPerWeek?: number;
+  targetDaysPerMonth?: number;
   budgetAmount: number;
   genderPreference?: string;
   status: string;
@@ -135,7 +137,7 @@ export default function MarketplacePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col pb-16">
+    <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col pb-24 sm:pb-16">
       <Navbar />
 
       {/* Hero Section */}
@@ -157,10 +159,10 @@ export default function MarketplacePage() {
           <div className="flex items-center gap-3">
             <Link
               href="/marketplace/create"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-semibold text-sm shadow-lg shadow-emerald-500/20 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-semibold text-sm shadow-lg shadow-emerald-500/20 transition-all whitespace-nowrap shrink-0"
             >
-              <PlusCircle className="h-4 w-4" />
-              <span>Post Tuition Requirement</span>
+              <PlusCircle className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap">Post Tuition Requirement</span>
             </Link>
           </div>
         </div>
@@ -295,12 +297,17 @@ export default function MarketplacePage() {
                           {post.location.area}, {post.location.city} ({post.location.mode})
                         </span>
                       </div>
-                      {post.daysPerWeek && (
+                      {post.daysPerWeek ? (
                         <div className="flex items-center gap-2">
                           <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                          <span>{post.daysPerWeek} days / week</span>
+                          <span className="whitespace-nowrap">{post.daysPerWeek} days / week</span>
                         </div>
-                      )}
+                      ) : post.targetDaysPerMonth ? (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span className="whitespace-nowrap">{post.targetDaysPerMonth} days / month</span>
+                        </div>
+                      ) : null}
                       <div className="flex items-center gap-2">
                         <Users className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                         <span>{post.applicationCount} applicant(s)</span>
@@ -309,12 +316,12 @@ export default function MarketplacePage() {
                   </div>
 
                   {/* Footer & Apply Action */}
-                  <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                  <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center justify-between gap-2">
                     <div>
                       <span className="text-[10px] uppercase tracking-wider text-slate-500 block">
                         Monthly Budget
                       </span>
-                      <span className="text-base font-extrabold text-emerald-400 font-mono">
+                      <span className="text-base font-extrabold text-emerald-400 font-mono whitespace-nowrap">
                         ৳{post.budgetAmount.toLocaleString()}
                       </span>
                     </div>
@@ -332,10 +339,10 @@ export default function MarketplacePage() {
                         }
                         setActivePost(post);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-medium text-xs border border-indigo-500/30 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-medium text-xs border border-indigo-500/30 transition-colors whitespace-nowrap shrink-0"
                     >
-                      <Send className="h-3.5 w-3.5" />
-                      <span>Apply as Tutor</span>
+                      <Send className="h-3.5 w-3.5 shrink-0" />
+                      <span className="whitespace-nowrap">Apply as Tutor</span>
                     </button>
                   </div>
                 </div>
@@ -389,22 +396,23 @@ export default function MarketplacePage() {
                 <button
                   type="button"
                   onClick={() => setActivePost(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white whitespace-nowrap"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={applying}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 whitespace-nowrap shrink-0"
                 >
-                  {applying ? 'Submitting...' : 'Send Application'}
+                  <span className="whitespace-nowrap">{applying ? 'Submitting...' : 'Send Application'}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+      <BottomNav />
     </div>
   );
 }

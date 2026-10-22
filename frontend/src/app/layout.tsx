@@ -45,10 +45,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-400">
+      <body className="min-h-full flex flex-col font-sans antialiased selection:bg-emerald-500/20 selection:text-emerald-600 dark:selection:text-emerald-400 transition-colors duration-200">
         <Providers>
           {children}
-          <Toaster richColors position="top-right" theme="dark" closeButton />
+          <Toaster richColors position="top-right" closeButton />
         </Providers>
       </body>
     </html>

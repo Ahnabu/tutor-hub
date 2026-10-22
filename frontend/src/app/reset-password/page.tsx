@@ -111,6 +111,7 @@ function ResetPasswordContent() {
                 type={showPassword ? 'text' : 'password'}
                 required
                 minLength={8}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min. 8 chars with uppercase & number"
@@ -137,6 +138,7 @@ function ResetPasswordContent() {
                 type={showConfirmPassword ? 'text' : 'password'}
                 required
                 minLength={8}
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"

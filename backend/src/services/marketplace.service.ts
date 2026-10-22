@@ -219,6 +219,7 @@ export class MarketplaceService {
       studentsInfo: p.studentsInfo,
       location: p.location,
       daysPerWeek: p.daysPerWeek,
+      targetDaysPerMonth: p.targetDaysPerMonth,
       budgetAmount: p.budgetAmount,
       status: p.status,
       createdAt: p.createdAt,
