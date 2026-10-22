@@ -259,4 +259,42 @@ npm run dev
   - 59/59 passing unit and integration tests across 7 test files in `backend/` (`phase4.test.ts` added with 14 passing tests).
   - Clean Next.js 16 production build (`npm run build`) with 16 static and dynamic routes.
 
+## 10. Phase 5: Unified Profile Hub, Mobile Nav Ergonomics & Guided Learning Home — COMPLETED
+- [x] **Unified Profile Hub (`/profile`):**
+  - Dedicated `/profile` route accessible across all user roles (Teachers, Guardians, Admins) and guests.
+  - General Profile card: Name, Verified Phone, Email, Joined Date, and Active Role Badges (`TEACHER`, `GUARDIAN`, `ADMIN`).
+  - Dynamic Role-Specific Panels:
+    - **Teacher:** Public directory listing status, university background, department, batch, rate range, bio, and verification badge status.
+    - **Guardian:** Active tuition contract links, tuition board posts, and direct tutor search shortcuts.
+    - **Admin:** Admin Hub command center shortcut.
+  - **Account Security & Password Management:**
+    - Authenticated password change form with Argon2id old password verification and eye toggles.
+    - Remote session management ("Sign Out from All Other Devices").
+    - GDPR Data Export (JSON download) & Permanent Account Anonymization/Deletion modal.
+  - **Prominent In-Profile Logout Button:**
+    - Full-width, accessible "Log Out" action button housed at the bottom of `/profile` with a confirmation safeguard to prevent accidental taps.
+- [x] **Mobile Navigation Refactoring & Dynamic Breadcrumbs:**
+  - Removed bulky "Log in", "Register", and standalone "Log out" buttons from top mobile navbar (`sm:hidden`).
+  - Dedicated mobile Profile icon button (`<Link href="/profile">`) with touch targets ≥ 44×44px, leading directly to the new `/profile` hub.
+  - Dynamic hierarchical breadcrumbs component in `Navbar.tsx` (`Home > Find Tutors`, `Home > Tuition Board`, `Home > Profile`, etc.) with clickable navigation.
+  - Updated `BottomNav.tsx` to support both authenticated users and guests, linking "Profile" directly to `/profile`.
+- [x] **Rich Guided Learning Home Page (`/`):**
+  - High-impact hero section with platform description, live KPI trust chips, and dual CTAs.
+  - **Interactive Guided Introduction Tour Modal:**
+    - Auto-prompts first-time visitors (persisted in `localStorage`).
+    - Reopenable anytime via "Take Guided Tour (60s)" hero button.
+    - Role-adaptive stepper (3 steps for Private Tutors, 3 steps for Parents/Guardians) with progress indicators and highlights.
+  - **"What TutorHub Does" Problem vs. Solution Matrix:**
+    - Breaks down the 4 hard realities of private tutoring in Bangladesh (disputed cycle counts, lesson amnesia, unvetted credentials, agency fee cuts) and TutorHub's digital solutions.
+  - **"How It Works in 4 Steps" Tabbed Walkthrough:**
+    - Interactive role switcher ("For Private Tutors" vs "For Parents & Guardians") with step cards (01, 02, 03, 04).
+  - **Feature Showcase Grid & FAQ Accordion:**
+    - Deep-dive into Next-Day Memory, PIN-Protected Parent Viewer, Live Tuition Board, 2-Document Credential Vetting, and Cycle Ledger.
+    - 6-item interactive FAQ accordion answering top questions.
+- [x] **Build & Validation Status:**
+  - 17/17 Next.js static and dynamic routes compiled, prerendered, and optimized with 0 errors (`npm run build`).
+  - Strict UI/UX Pro Max rule compliance (touch targets ≥ 44px, contrast ≥ 4.5:1, Lucide SVG icons only, no horizontal overflow).
+
+
+
 

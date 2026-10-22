@@ -29,6 +29,22 @@ The following features are purposefully deferred to future phases per the projec
 - Global system configuration and maintenance mode toggles.
 - Account self-deletion & data export (GDPR-style compliance).
 
+### Phase 5 — COMPLETED:
+- **Unified Profile Section for Everyone (`/profile`):**
+  - Dedicated `/profile` route supporting all user roles (Teacher, Guardian, Admin) and guests.
+  - Profile information, role badges, bio, and credentials overview.
+  - Security, password change, remote session management, and GDPR self-service.
+  - Prominent in-profile Logout button with confirmation safeguard.
+- **Mobile UI Navigation Refinement & Dynamic Breadcrumbs:**
+  - Moved logout, login, and register buttons from top mobile navbar (`sm:hidden`) into `/profile`.
+  - Added dynamic hierarchical breadcrumbs navigation to `Navbar.tsx`.
+  - Connected mobile `BottomNav.tsx` directly to `/profile`.
+- **Guided Learning & Explanatory Home Page (`/`):**
+  - Interactive onboarding tour modal (first-visit trigger + manual replay).
+  - Problem vs. Solution matrix for Bangladeshi tuition pain points.
+  - 4-step tabbed interactive workflow for Tutors and Guardians.
+  - Comprehensive feature showcase grid and 6-item FAQ accordion.
+
 ### Future Roadmap / V2 Backlog:
 - TOTP 2FA for administrative accounts.
 - Automated SMS gateway integration (e.g. SSL Wireless / BulkSMS BD).
