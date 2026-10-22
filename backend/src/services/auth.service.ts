@@ -5,7 +5,7 @@ import { TeacherPrivateProfile } from '../models/TeacherPrivateProfile.js';
 import { SessionLog } from '../models/SessionLog.js';
 import { MarketplacePost } from '../models/MarketplacePost.js';
 import { MarketplaceApplication } from '../models/MarketplaceApplication.js';
-import { UserRole, AccountStatus, LinkStatus, TuitionStatus } from '../enums/index.js';
+import { UserRole, AccountStatus, LinkStatus, TuitionStatus, MarketplacePostStatus } from '../enums/index.js';
 
 import {
   hashPassword,
@@ -628,7 +628,7 @@ export class AuthService {
   }
 
   /**
-   * Self-delete user account (anonymization and session revocation)
+   * Deactivate/unpublish user account (marks unpublished and deactivates sessions in DB)
    */
   static async deleteAccount(userId: string): Promise<{ message: string }> {
     const user = await User.findById(userId);
@@ -636,16 +636,11 @@ export class AuthService {
       throw new NotFoundError('User not found');
     }
 
-    // Anonymize user records
-    user.name = 'Deactivated User';
-    user.email = undefined;
-    user.phone = undefined;
-    user.passwordHash = undefined;
+    // Mark as unpublished in DB and suspend account
     user.accountStatus = AccountStatus.SUSPENDED;
     user.tokenVersion = (user.tokenVersion || 0) + 1;
     if (user.teacherProfile) {
       user.teacherProfile.isPublic = false;
-      user.teacherProfile.bio = undefined;
     }
     await user.save();
 
@@ -661,7 +656,13 @@ export class AuthService {
       { status: TuitionStatus.ARCHIVED, deletedAt: new Date() }
     );
 
-    return { message: 'Your account and personal data have been permanently deactivated.' };
+    // Close any open marketplace posts authored by this user
+    await MarketplacePost.updateMany(
+      { authorId: user._id, status: MarketplacePostStatus.OPEN },
+      { status: MarketplacePostStatus.CLOSED }
+    );
+
+    return { message: 'Your account has been deactivated and unpublished from public directories.' };
   }
 }
 

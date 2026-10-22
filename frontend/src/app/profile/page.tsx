@@ -112,21 +112,22 @@ export default function ProfilePage() {
     }
   };
 
-  // Account deletion
+  // Account unpublishing / deactivation
   const handleDeleteAccount = async () => {
-    if (deleteConfirmationText !== 'DELETE') {
-      showErrorToast(null, 'Please type DELETE to confirm account removal.');
+    const confirmation = deleteConfirmationText.trim().toUpperCase();
+    if (confirmation !== 'UNPUBLISH' && confirmation !== 'DELETE') {
+      showErrorToast(null, 'Please type UNPUBLISH to confirm account deactivation.');
       return;
     }
 
     setDeletingAccount(true);
     try {
       await api.post('/auth/delete-account');
-      showSuccessToast('Account anonymized and deleted. Goodbye.');
+      showSuccessToast('Account deactivated and unpublished from database.');
       logout();
       router.push('/');
     } catch (err: unknown) {
-      showErrorToast(err, 'Failed to delete account.');
+      showErrorToast(err, 'Failed to unpublish account.');
       setDeletingAccount(false);
     }
   };
@@ -208,16 +209,16 @@ export default function ProfilePage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
         {/* Profile Header Card */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-slate-900/90 to-indigo-500/10 border border-white/[0.08] backdrop-blur-2xl shadow-xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 flex items-center justify-center text-2xl font-black font-sans shadow-lg shadow-emerald-500/20 shrink-0">
+        <div className="p-5 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-slate-900/90 to-indigo-500/10 border border-white/[0.08] backdrop-blur-2xl shadow-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6">
+            <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 w-full sm:w-auto">
+              <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 flex items-center justify-center text-xl sm:text-2xl font-black font-sans shadow-lg shadow-emerald-500/20 shrink-0">
                 {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
 
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">
                     {user.name}
                   </h1>
                   {isTeacher && (
@@ -237,16 +238,16 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-slate-400 min-w-0">
                   {user.email && (
-                    <span className="flex items-center gap-1.5">
-                      <Mail className="h-3.5 w-3.5 text-slate-500" />
-                      <span>{user.email}</span>
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      <Mail className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                      <span className="truncate break-all">{user.email}</span>
                     </span>
                   )}
                   {user.phone && (
-                    <span className="flex items-center gap-1.5">
-                      <Phone className="h-3.5 w-3.5 text-slate-500" />
+                    <span className="flex items-center gap-1.5 shrink-0">
+                      <Phone className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                       <span>{user.phone}</span>
                     </span>
                   )}
@@ -329,13 +330,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-slate-400">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/[0.04]">
+              <span className="text-xs text-slate-400 leading-relaxed">
                 To edit profile details, upload NID or student ID, visit the Tutor Control Plane.
               </span>
               <Link
                 href="/teacher"
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/20 transition-all shrink-0"
               >
                 <span>Edit Credentials</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -522,18 +523,18 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/15 space-y-2">
-              <span className="text-xs font-semibold text-rose-400 block">Delete Account Permanently</span>
+            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+              <span className="text-xs font-semibold text-amber-400 block">Deactivate & Unpublish Account</span>
               <p className="text-[11px] text-slate-400">
-                Irreversibly anonymize your personal records and revoke all active credentials in accordance with data privacy standards.
+                Immediately unpublish your profile and tuition listings from the database and directory, and revoke all active sessions.
               </p>
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="mt-2 h-9 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-semibold text-xs flex items-center gap-2 transition-colors cursor-pointer"
+                className="mt-2 h-9 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 font-semibold text-xs flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Delete Account...</span>
+                <span>Deactivate & Unpublish...</span>
               </button>
             </div>
           </div>
@@ -583,29 +584,29 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* Account Deletion Confirmation Modal */}
+      {/* Account Deletion / Unpublish Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-hidden animate-fadeIn">
-          <div className="w-full max-w-md bg-slate-900 border border-rose-500/30 rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
+          <div className="w-full max-w-md bg-slate-900 border border-amber-500/30 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-amber-400">
               <AlertCircle className="h-6 w-6 shrink-0" />
-              <h3 className="text-lg font-bold text-white">Permanently Delete Account?</h3>
+              <h3 className="text-lg font-bold text-white">Deactivate & Unpublish Account?</h3>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              This action is permanent and cannot be undone. All personal records will be anonymized, and ongoing active session tokens will be revoked immediately.
+              This action immediately hides your profile and tuition listings from public directories and revokes all active sign-in sessions. Your account will remain safely preserved as unpublished in the database.
             </p>
 
             <div className="p-3 rounded-xl bg-slate-950 border border-white/[0.06] text-xs text-slate-400">
-              Please type <strong className="text-rose-400 font-mono">DELETE</strong> in the field below to confirm:
+              Please type <strong className="text-amber-400 font-mono">UNPUBLISH</strong> in the field below to confirm:
             </div>
 
             <input
               type="text"
               value={deleteConfirmationText}
               onChange={(e) => setDeleteConfirmationText(e.target.value)}
-              placeholder="Type DELETE"
-              className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-rose-500/30 text-sm text-white font-mono focus:outline-none focus:border-rose-500"
+              placeholder="Type UNPUBLISH"
+              className="w-full h-10 px-3.5 rounded-xl bg-slate-950 border border-amber-500/30 text-sm text-white font-mono focus:outline-none focus:border-amber-500"
             />
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -618,12 +619,16 @@ export default function ProfilePage() {
               </button>
               <button
                 type="button"
-                disabled={deletingAccount || deleteConfirmationText !== 'DELETE'}
+                disabled={
+                  deletingAccount ||
+                  (deleteConfirmationText.trim().toUpperCase() !== 'UNPUBLISH' &&
+                    deleteConfirmationText.trim().toUpperCase() !== 'DELETE')
+                }
                 onClick={handleDeleteAccount}
-                className="h-10 px-5 rounded-xl bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-rose-500/20 transition-all cursor-pointer disabled:opacity-50"
+                className="h-10 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-50"
               >
                 {deletingAccount && <Loader2 className="h-4 w-4 animate-spin" />}
-                <span>Permanently Delete</span>
+                <span>Confirm Unpublish</span>
               </button>
             </div>
           </div>

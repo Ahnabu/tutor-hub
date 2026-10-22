@@ -317,11 +317,10 @@ describe('Phase 4: Marketplace, Admin Command Center & Compliance Matrix', () =>
         .expect(200);
 
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toContain('permanently deactivated');
+      expect(res.body.message).toContain('deactivated and unpublished');
 
       const deactivated = await User.findById(teacherId);
-      expect(deactivated?.name).toBe('Deactivated User');
-      expect(deactivated?.email).toBeUndefined();
+      expect(deactivated?.teacherProfile?.isPublic).toBe(false);
       expect(deactivated?.accountStatus).toBe(AccountStatus.SUSPENDED);
     });
   });

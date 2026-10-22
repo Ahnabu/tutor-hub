@@ -172,11 +172,12 @@ export default function Home() {
         {/* ==================================================================== */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-20 pb-16 sm:pb-24 flex flex-col items-center text-center">
           {/* Status Chip */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-white/[0.08] text-xs font-medium text-slate-300 mb-6 backdrop-blur-md shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-emerald-400 font-semibold">TutorHub Bangladesh</span>
-            <span className="text-slate-500">•</span>
-            <span>Next-Day Memory • Cycle Tracking • Verified Tutors</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-white/[0.08] text-xs font-medium text-slate-300 mb-6 backdrop-blur-md shadow-sm max-w-[92vw]">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-emerald-400 font-semibold shrink-0">TutorHub</span>
+            <span className="text-slate-600">•</span>
+            <span className="hidden sm:inline text-slate-300">Next-Day Memory • Cycle Tracking • Verified Tutors</span>
+            <span className="sm:hidden text-[11px] text-slate-300 truncate">Next-Day Memory & Cycle OS</span>
           </div>
 
           {/* Main Hero Heading */}

@@ -101,7 +101,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
                 Full Name
@@ -109,6 +109,7 @@ export default function RegisterPage() {
               <input
                 type="text"
                 required
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Tanvir Ahmed"
@@ -123,6 +124,7 @@ export default function RegisterPage() {
               <input
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -137,6 +139,7 @@ export default function RegisterPage() {
               <input
                 type="tel"
                 required
+                autoComplete="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="017XXXXXXXX or +88017XXXXXXXX"
@@ -153,6 +156,7 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 8 chars with uppercase & number"

@@ -314,6 +314,7 @@ function VerifyEmailContent() {
                   <div className="relative">
                     <input
                       type={showNewPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new secure password"
@@ -338,6 +339,7 @@ function VerifyEmailContent() {
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Repeat new password"
