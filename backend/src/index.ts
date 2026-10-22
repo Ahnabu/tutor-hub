@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -56,6 +57,18 @@ app.get('/healthz', (_req: Request, res: Response) => {
 
 app.get('/readyz', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ready', timestamp: new Date().toISOString() });
+});
+
+// Ensure database connection for serverless cold starts
+app.use(async (_req: Request, _res: Response, next) => {
+  if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== 'test') {
+    try {
+      await connectDatabase();
+    } catch (err) {
+      return next(err);
+    }
+  }
+  next();
 });
 
 // 6. Application API Routes

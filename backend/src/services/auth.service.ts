@@ -45,8 +45,9 @@ export class AuthService {
     password: string;
     role: UserRole.TEACHER | UserRole.GUARDIAN;
   }): Promise<{ message: string; email: string }> {
+    const normalizedEmail = data.email.toLowerCase().trim();
     const existing = await User.findOne({
-      $or: [{ email: data.email }, ...(data.phone ? [{ phone: data.phone }] : [])],
+      $or: [{ email: normalizedEmail }, ...(data.phone ? [{ phone: data.phone }] : [])],
     });
 
     if (existing) {
@@ -70,17 +71,19 @@ export class AuthService {
     let user: IUser;
     if (existing && existing.accountStatus === AccountStatus.PENDING_VERIFICATION) {
       existing.name = data.name;
+      existing.email = normalizedEmail;
       existing.passwordHash = passwordHash;
       existing.roles = [data.role];
       existing.otpHash = otpHash;
       existing.otpExpiresAt = otpExpiresAt;
       existing.otpAttempts = 0;
       existing.otpLastSentAt = new Date();
+      if (data.phone) existing.phone = data.phone;
       user = await existing.save();
     } else {
       user = await User.create({
         name: data.name,
-        email: data.email,
+        email: normalizedEmail,
         phone: data.phone,
         passwordHash,
         roles: [data.role],
@@ -132,7 +135,8 @@ export class AuthService {
     userAgent?: string,
     ip?: string
   ): Promise<IAuthResult> {
-    const user = await User.findOne({ email }).select(
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select(
       '+otpHash +otpExpiresAt +otpAttempts +passwordHash'
     );
 
@@ -188,7 +192,8 @@ export class AuthService {
    * Resend OTP for email verification
    */
   static async resendOtp(email: string): Promise<{ message: string }> {
-    const user = await User.findOne({ email }).select('+otpLastSentAt');
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+otpLastSentAt');
     if (!user) {
       // Return generic message to prevent email enumeration
       return { message: 'If an unverified account exists, a new code has been sent.' };
@@ -269,7 +274,27 @@ export class AuthService {
     }
 
     if (user.accountStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenError('Please verify your email address to log in', 'ACCOUNT_UNVERIFIED');
+      if (user.accountStatus === AccountStatus.PENDING_VERIFICATION || !user.isEmailVerified) {
+        // Automatically issue a fresh OTP code and dispatch it to their email
+        const otp = generateNumericOtp();
+        user.otpHash = sha256(otp);
+        user.otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        user.otpAttempts = 0;
+        user.otpLastSentAt = new Date();
+        await user.save();
+
+        if (user.email) {
+          await EmailService.sendVerificationOtp(user.email, user.name, otp);
+        }
+
+        throw new ForbiddenError(
+          'Your account is not verified yet. A fresh verification code has been sent to your email.',
+          'ACCOUNT_UNVERIFIED',
+          { email: user.email }
+        );
+      }
+
+      throw new ForbiddenError('Account is not active', 'ACCOUNT_INACTIVE');
     }
 
     // Reset login failures

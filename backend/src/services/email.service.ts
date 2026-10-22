@@ -14,7 +14,7 @@ export const transporter = nodemailer.createTransport({
 
 export class EmailService {
   /**
-   * Enqueue an email into the EmailOutbox collection for asynchronous processing
+   * Enqueue an email into the EmailOutbox collection for processing and immediate dispatch
    */
   static async enqueue(
     to: string,
@@ -22,7 +22,7 @@ export class EmailService {
     html: string,
     text?: string
   ): Promise<void> {
-    await EmailOutbox.create({
+    const outbox = await EmailOutbox.create({
       to,
       subject,
       html,
@@ -31,6 +31,31 @@ export class EmailService {
       attempts: 0,
       nextRetryAt: new Date(),
     });
+
+    // In test environment, skip network SMTP to keep tests isolated and fast
+    if (env.NODE_ENV === 'test') {
+      return;
+    }
+
+    // Direct synchronous dispatch (vital for serverless like Vercel where background loops are frozen)
+    try {
+      if (env.SMTP_HOST && env.SMTP_USER) {
+        await transporter.sendMail({
+          from: env.EMAIL_FROM,
+          to,
+          subject,
+          html,
+          text: text || subject,
+        });
+
+        outbox.status = EmailOutboxStatus.SENT;
+        outbox.sentAt = new Date();
+        outbox.attempts = 1;
+        await outbox.save();
+      }
+    } catch (err: any) {
+      console.error(`Immediate email dispatch to ${to} deferred to outbox worker:`, err.message);
+    }
   }
 
   /**

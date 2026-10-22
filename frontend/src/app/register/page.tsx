@@ -45,7 +45,13 @@ export default function RegisterPage() {
 
       showSuccessToast('Registration successful! Please check your email for the verification code.');
       router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
-    } catch (err: unknown) {
+    } catch (err: any) {
+      const errCode = err?.response?.data?.error?.code;
+      if (errCode === 'ACCOUNT_UNVERIFIED') {
+        showSuccessToast('Your account is pending verification. A fresh code was sent to your email.');
+        router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
+        return;
+      }
       const msg = showErrorToast(err, 'Registration failed. Please check your information and try again.');
       setError(msg);
     } finally {
@@ -97,9 +103,22 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-300">
-              <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
-              <span>{error}</span>
+            <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 flex flex-col gap-2.5 text-xs text-rose-300">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+              {email.trim().includes('@') && (
+                <div className="pt-2 border-t border-rose-500/20 flex items-center justify-between">
+                  <span className="text-slate-400">Created an account but didn&apos;t verify?</span>
+                  <Link
+                    href={`/verify-email?email=${encodeURIComponent(email.trim())}`}
+                    className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2"
+                  >
+                    Verify Email
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 

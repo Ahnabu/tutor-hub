@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
@@ -9,13 +10,13 @@ import { Navbar } from '@/components/Navbar';
 import { ArrowRight, Loader2, AlertCircle, LogIn, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
+  const router = useRouter();
   const { login } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,18 @@ export default function LoginPage() {
 
       showSuccessToast(`Welcome back, ${res.data.data.user.name || 'Tutor'}!`);
       login(res.data.data.user);
-    } catch (err: unknown) {
+    } catch (err: any) {
+      const errCode = err?.response?.data?.error?.code;
+      const unverifiedEmail =
+        err?.response?.data?.error?.details?.email ||
+        (identifier.includes('@') ? identifier.trim() : '');
+
+      if (errCode === 'ACCOUNT_UNVERIFIED' && unverifiedEmail) {
+        showSuccessToast('A verification code has been sent to your email. Redirecting to verification...');
+        router.push(`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`);
+        return;
+      }
+
       const msg = showErrorToast(err, 'Login failed. Please check your credentials and try again.');
       setError(msg);
     } finally {
