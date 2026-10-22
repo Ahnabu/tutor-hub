@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ForbiddenError } from '../utils/errors.js';
 import { env } from '../config/env.js';
+import { isAllowedOrigin } from '../config/cors.js';
 
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
@@ -26,11 +27,10 @@ export const csrfProtection = (req: Request, _res: Response, next: NextFunction)
     );
   }
 
-  // 2. Origin / Referer validation if provided
+  // 2. Origin validation if provided
   const origin = req.headers.origin;
   if (origin && env.NODE_ENV === 'production') {
-    const allowedOrigin = env.CORS_ORIGIN;
-    if (origin !== allowedOrigin) {
+    if (!isAllowedOrigin(origin)) {
       return next(
         new ForbiddenError('Cross-origin request rejected', 'CSRF_ORIGIN_INVALID')
       );

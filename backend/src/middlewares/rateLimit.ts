@@ -9,6 +9,7 @@ export const globalLimiter = rateLimit({
   limit: isTest ? 10000 : isProduction ? 300 : 5000,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     error: {
       code: 'RATE_LIMIT_EXCEEDED',
@@ -22,6 +23,7 @@ export const authLimiter = rateLimit({
   limit: isTest ? 1000 : isProduction ? 30 : 500,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     error: {
       code: 'AUTH_RATE_LIMIT_EXCEEDED',
@@ -35,6 +37,7 @@ export const uploadLimiter = rateLimit({
   limit: isTest ? 1000 : isProduction ? 50 : 500,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     error: {
       code: 'UPLOAD_RATE_LIMIT_EXCEEDED',

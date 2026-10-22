@@ -16,6 +16,7 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters'),
+  COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).optional(),
 
   CLOUDINARY_CLOUD_NAME: z.string().default('mock_cloud'),
   CLOUDINARY_API_KEY: z.string().default('mock_key'),

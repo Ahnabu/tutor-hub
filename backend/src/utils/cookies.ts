@@ -2,14 +2,15 @@ import { Response, CookieOptions } from 'express';
 import { env } from '../config/env.js';
 
 const isProduction = env.NODE_ENV === 'production';
+const sameSiteSetting = env.COOKIE_SAME_SITE ?? (isProduction ? 'none' : 'lax');
 
 export const ACCESS_TOKEN_COOKIE = 'th_access_token';
 export const REFRESH_TOKEN_COOKIE = 'th_refresh_token';
 
-const baseCookieOptions: CookieOptions = {
+export const baseCookieOptions: CookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? 'lax' : 'lax',
+  secure: isProduction || sameSiteSetting === 'none',
+  sameSite: sameSiteSetting,
   path: '/',
 };
 

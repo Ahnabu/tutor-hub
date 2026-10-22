@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { GuardianService } from '../services/guardian.service.js';
 import { IUser } from '../models/User.js';
+import { baseCookieOptions } from '../utils/cookies.js';
 
 export class GuardianController {
   /**
@@ -15,9 +16,7 @@ export class GuardianController {
 
       // Set httpOnly cookie for 7 days
       res.cookie('guardian_view_token', result.viewToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        ...baseCookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 

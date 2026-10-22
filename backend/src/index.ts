@@ -16,14 +16,24 @@ import { teacherRoutes } from './routes/teacher.routes.js';
 import { contactRoutes } from './routes/contact.routes.js';
 import { marketplaceRoutes } from './routes/marketplace.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
+import { isAllowedOrigin } from './config/cors.js';
 
 const app = express();
+
+// Trust reverse proxy (Vercel, Render, AWS ALB, Cloudflare)
+app.set('trust proxy', 1);
 
 // 1. Security Headers & CORS
 app.use(helmet());
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   })
 );
