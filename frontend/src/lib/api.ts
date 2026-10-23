@@ -80,12 +80,14 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Ignore 401 on the refresh/login/register endpoints to prevent infinite retry loops
+    // Ignore 401 on refresh/login/register/verify-email/resend-otp endpoints to prevent refresh attempts
     const requestUrl = originalRequest.url || '';
     if (
       requestUrl.includes('/auth/refresh') ||
       requestUrl.includes('/auth/login') ||
-      requestUrl.includes('/auth/register')
+      requestUrl.includes('/auth/register') ||
+      requestUrl.includes('/auth/verify-email') ||
+      requestUrl.includes('/auth/resend-otp')
     ) {
       return Promise.reject(error);
     }

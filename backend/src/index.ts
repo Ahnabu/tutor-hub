@@ -25,19 +25,35 @@ const app = express();
 app.set('trust proxy', 1);
 
 // 1. Security Headers & CORS
-app.use(helmet());
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, false);
-      }
-    },
-    credentials: true,
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'x-bypass-csrf',
+  ],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // 2. Cookie & Body Parsers with limits
 app.use(cookieParser(env.COOKIE_SECRET));
@@ -50,7 +66,17 @@ app.use(globalLimiter);
 // 4. CSRF Protection for state-changing requests
 app.use(csrfProtection);
 
-// 5. Health & Readiness Diagnostics
+// 5. Health, Root & Diagnostics
+app.get(['/', env.API_PREFIX], (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    name: 'TutorHub API',
+    version: '1.0.0',
+    prefix: env.API_PREFIX,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/healthz', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });

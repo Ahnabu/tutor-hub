@@ -9,6 +9,7 @@ export const globalLimiter = rateLimit({
   limit: isTest ? 10000 : isProduction ? 300 : 5000,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   validate: { xForwardedForHeader: false },
   message: {
     error: {
@@ -23,6 +24,7 @@ export const authLimiter = rateLimit({
   limit: isTest ? 1000 : isProduction ? 30 : 500,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   validate: { xForwardedForHeader: false },
   message: {
     error: {
@@ -37,6 +39,7 @@ export const uploadLimiter = rateLimit({
   limit: isTest ? 1000 : isProduction ? 50 : 500,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   validate: { xForwardedForHeader: false },
   message: {
     error: {

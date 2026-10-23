@@ -1,33 +1,42 @@
 import { env } from './env.js';
 
+export const HARDCODED_ORIGINS = [
+  'https://tutor-hub-khaki.vercel.app',
+  'https://tutorhub.vercel.app',
+  'https://tutor-hub.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5000',
+];
+
 export const getAllowedOrigins = (): string[] => {
-  return env.CORS_ORIGIN
+  const envOrigins = (env.CORS_ORIGIN || '')
     .split(',')
     .map((o) => o.trim().replace(/\/$/, ''))
     .filter(Boolean);
+
+  return Array.from(new Set([...HARDCODED_ORIGINS, ...envOrigins]));
 };
 
 export const isAllowedOrigin = (origin?: string): boolean => {
   // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
   if (!origin) return true;
 
-  const cleanOrigin = origin.replace(/\/$/, '');
+  const cleanOrigin = origin.trim().replace(/\/$/, '');
   const allowed = getAllowedOrigins();
 
   if (allowed.includes(cleanOrigin) || allowed.includes('*')) {
     return true;
   }
 
-  // Allow Vercel preview & production deployments if any vercel.app is configured
-  if (
-    allowed.some((ao) => ao.includes('vercel.app')) &&
-    /^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/.test(cleanOrigin)
-  ) {
+  // Unconditionally allow ANY Vercel deployment (preview branches, production, custom domains)
+  if (/^https:\/\/[a-zA-Z0-9._-]+\.vercel\.app$/.test(cleanOrigin)) {
     return true;
   }
 
-  // In non-production, allow localhost and local IPs
-  if (env.NODE_ENV !== 'production' && /https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
+  // Allow localhost & local network IPs
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
     return true;
   }
 
