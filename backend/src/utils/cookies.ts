@@ -1,7 +1,7 @@
 import { Response, CookieOptions } from 'express';
 import { env } from '../config/env.js';
 
-const isProduction = env.NODE_ENV === 'production';
+const isProduction = env.NODE_ENV === 'production' || !!process.env.VERCEL;
 const sameSiteSetting = env.COOKIE_SAME_SITE ?? (isProduction ? 'none' : 'lax');
 
 export const ACCESS_TOKEN_COOKIE = 'th_access_token';

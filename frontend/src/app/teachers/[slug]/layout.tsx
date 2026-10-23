@@ -11,10 +11,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const backendUrl = process.env.BACKEND_INTERNAL_URL || 'http://localhost:5000';
+  const rawBackendUrl =
+    process.env.BACKEND_INTERNAL_URL ||
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ||
+    (process.env.NODE_ENV === 'production' || process.env.VERCEL
+      ? 'https://backend-five-rosy-71.vercel.app'
+      : 'http://localhost:5000');
+  const backendUrl = rawBackendUrl.replace(/\/$/, '');
 
   try {
-    const res = await fetch(`${backendUrl}/api/teachers/${slug}`, {
+    const res = await fetch(`${backendUrl}/api/v1/teachers/${slug}`, {
       next: { revalidate: 60 },
     });
     if (res.ok) {
