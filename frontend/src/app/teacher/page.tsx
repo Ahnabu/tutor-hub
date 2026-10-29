@@ -112,6 +112,7 @@ export default function TeacherDashboardPage() {
       const res = await api.get('/tuitions');
       return res.data.data.tuitions;
     },
+    enabled: !!user,
   });
 
   // Fetch incoming contact requests
@@ -121,6 +122,7 @@ export default function TeacherDashboardPage() {
       const res = await api.get('/contact-requests/incoming');
       return res.data.data.requests;
     },
+    enabled: !!user,
   });
   const pendingRequestsCount = (incomingRequests as Array<{ status: string }>).filter(
     (r) => r.status === 'PENDING'

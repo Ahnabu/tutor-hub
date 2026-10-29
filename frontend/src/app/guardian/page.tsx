@@ -94,6 +94,7 @@ export default function GuardianDashboardPage() {
       const res = await api.get('/guardian/tuitions');
       return res.data.data;
     },
+    enabled: !!user,
   });
 
   // 2. Fetch Contact Requests
@@ -105,6 +106,7 @@ export default function GuardianDashboardPage() {
       const res = await api.get('/contact-requests/mine');
       return res.data.data;
     },
+    enabled: !!user,
   });
 
   const tuitions = tuitionsData?.tuitions || [];
@@ -383,6 +385,7 @@ export default function GuardianDashboardPage() {
 }
 
 function GuardianMarketplacePostsSection() {
+  const { user } = useAuth();
   const [posts, setPosts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedPostId, setSelectedPostId] = React.useState<string | null>(null);
@@ -390,6 +393,10 @@ function GuardianMarketplacePostsSection() {
   const [loadingApps, setLoadingApps] = React.useState(false);
 
   const fetchMyPosts = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await api.get('/marketplace/my-posts');
@@ -404,8 +411,12 @@ function GuardianMarketplacePostsSection() {
   };
 
   React.useEffect(() => {
-    fetchMyPosts();
-  }, []);
+    if (user) {
+      fetchMyPosts();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const openApplicantsModal = async (postId: string) => {
     try {

@@ -4,35 +4,61 @@ import { env } from '../config/env.js';
 import { EmailOutbox } from '../models/EmailOutbox.js';
 import { EmailOutboxStatus } from '../enums/index.js';
 
+// Utility to clean quotes, newlines, and trailing spaces from environment variables
+const cleanCredential = (val?: string): string => {
+  if (!val) return '';
+  return val
+    .trim()
+    .replace(/^["']+|["']+$/g, '') // strip wrapping single or double quotes
+    .replace(/[\r\n\t]+/g, '')
+    .trim();
+};
+
+const cleanPass = (val?: string): string => {
+  if (!val) return '';
+  // Strip quotes and internal spaces (Google App Passwords are 16 chars like "sbnb sddm ctzg vpak")
+  return cleanCredential(val).replace(/\s+/g, '');
+};
+
+const getFromAddress = (): string => {
+  const from = cleanCredential(env.EMAIL_FROM);
+  if (from) return from;
+  const user = cleanCredential(env.SMTP_USER);
+  return user ? `TutorHub <${user}>` : 'noreply@tutorhub.com';
+};
+
 // Nodemailer SMTP Transporter
 const createTransporter = () => {
+  const sanitizedUser = cleanCredential(env.SMTP_USER);
+  const sanitizedPass = cleanPass(env.SMTP_PASS);
+  const sanitizedHost = cleanCredential(env.SMTP_HOST) || 'smtp.gmail.com';
+  const port = Number(env.SMTP_PORT) || 587;
+
   const isGmail =
-    env.SMTP_HOST.includes('gmail.com') ||
-    (env.SMTP_USER && env.SMTP_USER.toLowerCase().endsWith('@gmail.com'));
+    sanitizedHost.includes('gmail.com') ||
+    (sanitizedUser && sanitizedUser.toLowerCase().endsWith('@gmail.com'));
 
-  const sanitizedPass = env.SMTP_PASS ? env.SMTP_PASS.replace(/\s+/g, '') : '';
-
-  if (isGmail && env.SMTP_USER && sanitizedPass) {
+  if (isGmail && sanitizedUser && sanitizedPass) {
     return nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: env.SMTP_USER,
+        user: sanitizedUser,
         pass: sanitizedPass,
       },
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 8000,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     });
   }
 
   return nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
+    host: sanitizedHost,
+    port,
     secure: env.SMTP_SECURE,
-    auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: sanitizedPass } : undefined,
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 8000,
+    auth: sanitizedUser && sanitizedPass ? { user: sanitizedUser, pass: sanitizedPass } : undefined,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 10000,
   });
 };
 
@@ -65,9 +91,12 @@ export class EmailService {
 
     // Direct synchronous dispatch (vital for serverless like Vercel where background loops are frozen)
     try {
-      if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+      const sanitizedUser = cleanCredential(env.SMTP_USER);
+      const sanitizedPass = cleanPass(env.SMTP_PASS);
+
+      if (sanitizedUser && sanitizedPass) {
         await transporter.sendMail({
-          from: env.EMAIL_FROM,
+          from: getFromAddress(),
           to,
           subject,
           html,
@@ -81,11 +110,20 @@ export class EmailService {
         console.log(`✉️ [EmailService] Verification/notification email dispatched to ${to}`);
       } else {
         console.warn(
-          `⚠️ [EmailService] SMTP credentials incomplete (USER="${env.SMTP_USER || 'EMPTY'}", PASS="${env.SMTP_PASS ? '***' : 'EMPTY'}"). Email queued in outbox for ${to}. Please configure SMTP environment variables in your Vercel Project Settings.`
+          `⚠️ [EmailService] SMTP credentials incomplete (USER="${sanitizedUser || 'EMPTY'}", PASS="${sanitizedPass ? '***' : 'EMPTY'}"). Email queued in outbox for ${to}. Please configure SMTP environment variables in your Vercel Project Settings.`
         );
       }
     } catch (err: any) {
       console.error(`❌ [EmailService] Immediate email dispatch to ${to} failed:`, err.message);
+      if (err.message?.includes('535') || err.message?.includes('BadCredentials')) {
+        console.error(
+          `\n🚨 [EmailService DIAGNOSTIC - BadCredentials (535)]:\n` +
+          `   Google rejected SMTP authentication for user "${cleanCredential(env.SMTP_USER)}".\n` +
+          `   1. Make sure SMTP_PASS in Vercel is a 16-character Google App Password entered without quotes.\n` +
+          `   2. Check https://myaccount.google.com/notifications and approve any blocked sign-in attempt.\n` +
+          `   3. If verifying an account, use the [TutorHub OTP RESCUE CODE] printed in this log to verify immediately.\n`
+        );
+      }
       outbox.error = err.message;
       await outbox.save();
     }
@@ -95,6 +133,13 @@ export class EmailService {
    * Helper to send an Email Verification OTP email
    */
   static async sendVerificationOtp(to: string, name: string, otp: string): Promise<void> {
+    console.log(`\n=============================================================`);
+    console.log(`🔑 [TutorHub OTP RESCUE CODE]`);
+    console.log(`   To: ${to} (${name})`);
+    console.log(`   Verification OTP: [ ${otp} ]`);
+    console.log(`   Valid for: 15 minutes`);
+    console.log(`=============================================================\n`);
+
     const subject = `${otp} is your TutorHub verification code`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #090D16; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
@@ -117,6 +162,12 @@ export class EmailService {
    */
   static async sendPasswordReset(to: string, name: string, resetToken: string): Promise<void> {
     const resetUrl = `${env.CORS_ORIGIN}/reset-password?token=${resetToken}`;
+    console.log(`\n=============================================================`);
+    console.log(`🔑 [TutorHub PASSWORD RESET RESCUE LINK]`);
+    console.log(`   To: ${to} (${name})`);
+    console.log(`   Reset URL: ${resetUrl}`);
+    console.log(`   Valid for: 1 hour`);
+    console.log(`=============================================================\n`);
     const subject = 'Reset your TutorHub password';
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #090D16; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
@@ -211,7 +262,7 @@ export class EmailWorker {
 
         try {
           await transporter.sendMail({
-            from: env.EMAIL_FROM,
+            from: getFromAddress(),
             to: email.to,
             subject: email.subject,
             html: email.html,
