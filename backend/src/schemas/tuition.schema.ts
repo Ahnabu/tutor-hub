@@ -21,7 +21,7 @@ export const scheduleConfigSchema = z
   .object({
     billingModel: z.nativeEnum(BillingModel).default(BillingModel.MONTHLY_CYCLE),
     targetDaysPerCycle: z.number().int().min(1).max(31).default(12),
-    weeklyDays: z.array(z.nativeEnum(WeekDay)).min(1),
+    weeklyDays: z.array(z.nativeEnum(WeekDay)).default([]),
     preferredTime: z.string().max(20).optional(),
     durationMinutes: z.number().int().min(15).max(360).default(90),
     extraClassCountsTowardCycle: z.boolean().default(true),

@@ -95,6 +95,12 @@ app.use(async (_req: Request, _res: Response, next) => {
       return next(err);
     }
   }
+  // If running in serverless, opportunistic flush of any pending outbox emails
+  if (process.env.VERCEL && env.SMTP_USER && env.SMTP_PASS) {
+    EmailWorker.flushPendingOutbox(3).catch((err) => {
+      console.warn('Background serverless outbox flush non-fatal error:', err.message);
+    });
+  }
   next();
 });
 

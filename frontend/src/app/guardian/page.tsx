@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -73,6 +73,17 @@ interface ContactRequestItem {
 export default function GuardianDashboardPage() {
   const { user } = useAuth();
   const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+
+  // If a guardian lands here with a direct transparency token (?token=...), redirect to the PIN verification view page
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        window.location.replace(`/guardian/view/${encodeURIComponent(token)}`);
+      }
+    }
+  }, []);
 
   // 1. Fetch Claimed Tuitions
   const { data: tuitionsData, isLoading: isTuitionsLoading } = useQuery<{

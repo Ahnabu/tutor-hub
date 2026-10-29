@@ -5,12 +5,38 @@ import { EmailOutbox } from '../models/EmailOutbox.js';
 import { EmailOutboxStatus } from '../enums/index.js';
 
 // Nodemailer SMTP Transporter
-export const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_SECURE,
-  auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined,
-});
+const createTransporter = () => {
+  const isGmail =
+    env.SMTP_HOST.includes('gmail.com') ||
+    (env.SMTP_USER && env.SMTP_USER.toLowerCase().endsWith('@gmail.com'));
+
+  const sanitizedPass = env.SMTP_PASS ? env.SMTP_PASS.replace(/\s+/g, '') : '';
+
+  if (isGmail && env.SMTP_USER && sanitizedPass) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: env.SMTP_USER,
+        pass: sanitizedPass,
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 8000,
+    });
+  }
+
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
+    auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: sanitizedPass } : undefined,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 8000,
+  });
+};
+
+export const transporter = createTransporter();
 
 export class EmailService {
   /**
@@ -39,7 +65,7 @@ export class EmailService {
 
     // Direct synchronous dispatch (vital for serverless like Vercel where background loops are frozen)
     try {
-      if (env.SMTP_HOST && env.SMTP_USER) {
+      if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
         await transporter.sendMail({
           from: env.EMAIL_FROM,
           to,
@@ -52,9 +78,16 @@ export class EmailService {
         outbox.sentAt = new Date();
         outbox.attempts = 1;
         await outbox.save();
+        console.log(`✉️ [EmailService] Verification/notification email dispatched to ${to}`);
+      } else {
+        console.warn(
+          `⚠️ [EmailService] SMTP credentials incomplete (USER="${env.SMTP_USER || 'EMPTY'}", PASS="${env.SMTP_PASS ? '***' : 'EMPTY'}"). Email queued in outbox for ${to}. Please configure SMTP environment variables in your Vercel Project Settings.`
+        );
       }
     } catch (err: any) {
-      console.error(`Immediate email dispatch to ${to} deferred to outbox worker:`, err.message);
+      console.error(`❌ [EmailService] Immediate email dispatch to ${to} failed:`, err.message);
+      outbox.error = err.message;
+      await outbox.save();
     }
   }
 
@@ -149,19 +182,26 @@ export class EmailWorker {
     }
   }
 
-  static async processOutbox(): Promise<void> {
+  static async flushPendingOutbox(limit = 5): Promise<void> {
+    if (this.isProcessing) return;
+    if (mongoose.connection.readyState !== 1) return;
+    if (!env.SMTP_USER || !env.SMTP_PASS) return;
+    await this.processOutbox(limit);
+  }
+
+  static async processOutbox(limit = 10): Promise<void> {
     if (this.isProcessing) return;
     if (mongoose.connection.readyState !== 1) return;
     this.isProcessing = true;
 
     try {
       const now = new Date();
-      // Find up to 10 pending or retriable emails
+      // Find up to specified limit of pending or retriable emails
       const emails = await EmailOutbox.find({
         status: { $in: [EmailOutboxStatus.PENDING, EmailOutboxStatus.PROCESSING] },
         nextRetryAt: { $lte: now },
         attempts: { $lt: 5 }, // max 5 attempts
-      }).limit(10);
+      }).limit(limit);
 
       for (const email of emails) {
         email.status = EmailOutboxStatus.PROCESSING;

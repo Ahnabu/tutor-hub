@@ -99,8 +99,9 @@ export class TuitionService {
       let existingGuardian = await User.findOne({ $or: query });
       if (!existingGuardian) {
         // Create unclaimed shadow account for guardian
+        const studentNames = input.students.map((s) => s.name).join(' & ');
         existingGuardian = await User.create({
-          name: input.guardianName || `${input.students[0].name}'s Guardian`,
+          name: input.guardianName || `${studentNames}'s Guardian`,
           email: input.guardianEmail ? input.guardianEmail.toLowerCase() : undefined,
           phone: input.guardianPhone,
           roles: [UserRole.GUARDIAN],
@@ -114,9 +115,10 @@ export class TuitionService {
     }
 
     const startDate = input.cycleStartDate ? new Date(input.cycleStartDate) : new Date();
+    const uniqueClasses = Array.from(new Set(input.students.map((s) => s.classGrade))).join(', ');
     const title =
       input.title ||
-      `${input.students.map((s) => s.name).join(', ')} - ${input.students[0].classGrade}`;
+      `${input.students.map((s) => s.name).join(', ')} — ${uniqueClasses}`;
 
     const tuition = await Tuition.create({
       teacherId: teacherObjectId,
@@ -251,7 +253,7 @@ export class TuitionService {
     return {
       shareToken: rawToken,
       accessPin: pin,
-      linkUrl: `/guardian?token=${rawToken}`,
+      linkUrl: `/guardian/view/${rawToken}`,
     };
   }
 

@@ -31,6 +31,7 @@ export const getBaseURL = (): string => {
 export const api = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
     'X-Requested-With': 'tutorhub',

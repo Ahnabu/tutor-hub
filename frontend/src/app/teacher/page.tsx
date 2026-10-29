@@ -36,6 +36,9 @@ import {
   Shield,
   FileCheck,
   Check,
+  Calendar,
+  Clock,
+  Users,
 } from 'lucide-react';
 
 interface Student {
@@ -259,7 +262,11 @@ export default function TeacherDashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeTuitions.map((tuition) => {
-              const student = tuition.students[0] || { name: 'Student', classGrade: '', subjects: [] };
+              const studentNames = tuition.students.map((s) => s.name).join(' & ') || 'Student';
+              const studentClasses = Array.from(new Set(tuition.students.map((s) => s.classGrade))).join(', ');
+              const allSubjects = Array.from(
+                new Set(tuition.students.flatMap((s) => s.subjects || []))
+              );
               const cycle = tuition.currentCycle;
               const target = tuition.scheduleConfig?.targetDaysPerCycle || 12;
               const percent = Math.min(100, Math.round((cycle.completedDays / target) * 100));
@@ -270,19 +277,28 @@ export default function TeacherDashboardPage() {
                   className="p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl hover:border-emerald-500/30 transition-all flex flex-col justify-between group"
                 >
                   <div>
-                    {/* Header: Student Name & Payment Badge */}
+                    {/* Header: Student Name(s) & Payment Badge */}
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
-                          {student.name}
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {student.classGrade} {student.curriculum ? `• ${student.curriculum}` : ''}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                            {studentNames}
+                          </h3>
+                          {tuition.students.length > 1 && (
+                            <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                              {tuition.students.length} Students
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5 truncate">
+                          {tuition.students.length > 1
+                            ? tuition.students.map((s) => `${s.name} (${s.classGrade})`).join(' • ')
+                            : `${tuition.students[0]?.classGrade || ''}${tuition.students[0]?.curriculum ? ` • ${tuition.students[0].curriculum}` : ''}`}
                         </p>
                       </div>
 
                       <span
-                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border shrink-0 ${
                           cycle.paymentStatus === 'PAID'
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                             : cycle.paymentStatus === 'PARTIAL'
@@ -294,9 +310,19 @@ export default function TeacherDashboardPage() {
                       </span>
                     </div>
 
-                    {/* Subject Tags */}
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {student.subjects?.map((sub, idx) => (
+                    {/* Subject Tags & Cycle Badge */}
+                    <div className="flex flex-wrap items-center gap-1.5 mb-5">
+                      <span className="text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {tuition.scheduleConfig?.billingModel === 'FIXED_WEEKLY'
+                          ? 'Weekly Cycle'
+                          : 'Monthly Cycle'}
+                      </span>
+                      {tuition.scheduleConfig?.weeklyDays && tuition.scheduleConfig.weeklyDays.length > 0 && (
+                        <span className="text-[10px] font-mono text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded border border-white/[0.04]">
+                          {tuition.scheduleConfig.weeklyDays.join(', ')}
+                        </span>
+                      )}
+                      {allSubjects.map((sub, idx) => (
                         <span
                           key={idx}
                           className="text-[11px] bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded-md border border-white/[0.04]"
@@ -433,6 +459,23 @@ export default function TeacherDashboardPage() {
 // ==============================================================================
 // 1. CREATE TUITION MODAL
 // ==============================================================================
+const ALL_WEEK_DAYS = [
+  { id: 'SAT', label: 'Sat', full: 'Saturday' },
+  { id: 'SUN', label: 'Sun', full: 'Sunday' },
+  { id: 'MON', label: 'Mon', full: 'Monday' },
+  { id: 'TUE', label: 'Tue', full: 'Tuesday' },
+  { id: 'WED', label: 'Wed', full: 'Wednesday' },
+  { id: 'THU', label: 'Thu', full: 'Thursday' },
+  { id: 'FRI', label: 'Fri', full: 'Friday' },
+];
+
+interface StudentFormItem {
+  id: string;
+  name: string;
+  classGrade: string;
+  subjects: string;
+}
+
 function CreateTuitionModal({
   onClose,
   onSuccess,
@@ -440,15 +483,50 @@ function CreateTuitionModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [studentName, setStudentName] = useState('');
-  const [classGrade, setClassGrade] = useState('Class 9');
-  const [subjects, setSubjects] = useState('Physics, Math');
+  // Support multiple students (same class or different classes, e.g. siblings/batch)
+  const [students, setStudents] = useState<StudentFormItem[]>([
+    { id: '1', name: '', classGrade: 'Class 9', subjects: 'Physics, Math' },
+  ]);
   const [monthlyFee, setMonthlyFee] = useState('8000');
+
+  // Cycle Model: WEEKLY (choose days) vs MONTHLY (choose number of days per cycle)
+  const [cycleType, setCycleType] = useState<'WEEKLY' | 'MONTHLY'>('MONTHLY');
+  const [selectedWeeklyDays, setSelectedWeeklyDays] = useState<string[]>(['SUN', 'TUE', 'THU']);
   const [targetDays, setTargetDays] = useState('12');
+
   const [guardianName, setGuardianName] = useState('');
   const [guardianPhone, setGuardianPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const addStudent = () => {
+    setStudents((prev) => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substring(2, 9),
+        name: '',
+        classGrade: prev[prev.length - 1]?.classGrade || 'Class 9',
+        subjects: prev[prev.length - 1]?.subjects || 'General',
+      },
+    ]);
+  };
+
+  const removeStudent = (id: string) => {
+    if (students.length <= 1) return;
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const updateStudent = (id: string, field: keyof StudentFormItem, value: string) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
+    );
+  };
+
+  const toggleDay = (dayId: string) => {
+    setSelectedWeeklyDays((prev) =>
+      prev.includes(dayId) ? prev.filter((d) => d !== dayId) : [...prev, dayId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -462,28 +540,60 @@ function CreateTuitionModal({
       return;
     }
 
+    // Validate all students
+    for (let i = 0; i < students.length; i++) {
+      if (!students[i].name.trim()) {
+        const msg = `Please enter student full name for Student #${i + 1}`;
+        setError(msg);
+        showErrorToast(new Error(msg));
+        return;
+      }
+      if (!students[i].classGrade.trim()) {
+        const msg = `Please enter class/grade for ${students[i].name || `Student #${i + 1}`}`;
+        setError(msg);
+        showErrorToast(new Error(msg));
+        return;
+      }
+    }
+
+    if (cycleType === 'WEEKLY' && selectedWeeklyDays.length === 0) {
+      const msg = 'Please choose at least one day for weekly cycle';
+      setError(msg);
+      showErrorToast(new Error(msg));
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const subjectList = subjects
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const payloadStudents = students.map((s) => {
+        const subjectList = s.subjects
+          .split(',')
+          .map((sub) => sub.trim())
+          .filter(Boolean);
+        return {
+          name: s.name.trim(),
+          classGrade: s.classGrade.trim(),
+          subjects: subjectList.length > 0 ? subjectList : ['General'],
+          isActive: true,
+        };
+      });
+
+      const isWeekly = cycleType === 'WEEKLY';
+      const daysCount = isWeekly
+        ? selectedWeeklyDays.length * 4
+        : parseInt(targetDays, 10) || 12;
+
+      const uniqueClasses = Array.from(new Set(payloadStudents.map((s) => s.classGrade))).join(', ');
+      const autoTitle = `${payloadStudents.map((s) => s.name).join(', ')} — ${uniqueClasses}`;
 
       await api.post('/tuitions', {
-        title: `${studentName} — ${classGrade}`,
-        students: [
-          {
-            name: studentName.trim(),
-            classGrade,
-            subjects: subjectList.length > 0 ? subjectList : ['General'],
-            isActive: true,
-          },
-        ],
+        title: autoTitle,
+        students: payloadStudents,
         scheduleConfig: {
-          billingModel: 'MONTHLY_CYCLE',
-          targetDaysPerCycle: parseInt(targetDays, 10) || 12,
-          weeklyDays: ['SUN', 'TUE', 'THU'],
+          billingModel: isWeekly ? 'FIXED_WEEKLY' : 'MONTHLY_CYCLE',
+          targetDaysPerCycle: daysCount,
+          weeklyDays: selectedWeeklyDays.length > 0 ? selectedWeeklyDays : ['SUN', 'TUE', 'THU'],
           durationMinutes: 90,
         },
         monthlyFee: parseFloat(monthlyFee) || 0,
@@ -503,7 +613,7 @@ function CreateTuitionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-lg bg-slate-900 border border-white/[0.1] rounded-2xl p-6 shadow-2xl relative my-8">
+      <div className="w-full max-w-lg bg-slate-900 border border-white/[0.1] rounded-2xl p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
@@ -513,7 +623,7 @@ function CreateTuitionModal({
 
         <h3 className="text-xl font-bold text-white mb-1">Create Student Agreement</h3>
         <p className="text-xs text-slate-400 mb-5">
-          Set up a new tuition cycle, student grade, and billing schedule.
+          Set up a tuition contract for one or multiple students (same or different classes), cycle schedule, and billing.
         </p>
 
         {error && (
@@ -524,70 +634,221 @@ function CreateTuitionModal({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Student Full Name *</label>
-              <input
-                type="text"
-                required
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-                placeholder="e.g. Abrar Fahim"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
+          {/* Multiple Students Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <Users className="h-4 w-4 text-emerald-400" />
+                <span>Students in this Tuition ({students.length})</span>
+              </label>
+              <button
+                type="button"
+                onClick={addStudent}
+                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Student</span>
+              </button>
             </div>
 
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Class / Grade *</label>
-              <input
-                type="text"
-                required
-                value={classGrade}
-                onChange={(e) => setClassGrade(e.target.value)}
-                placeholder="e.g. Class 10 / HSC"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
+            <div className="space-y-3">
+              {students.map((st, index) => (
+                <div
+                  key={st.id}
+                  className="p-3.5 rounded-xl bg-slate-950/70 border border-white/[0.07] space-y-3 relative group"
+                >
+                  <div className="flex items-center justify-between border-b border-white/[0.05] pb-2">
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <GraduationCap className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>Student #{index + 1}</span>
+                      {students.length > 1 && (
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          (Multiple students in 1 contract)
+                        </span>
+                      )}
+                    </span>
+                    {students.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeStudent(st.id)}
+                        className="text-slate-400 hover:text-rose-400 transition-colors p-1 rounded-lg hover:bg-rose-500/10 cursor-pointer text-xs flex items-center gap-1"
+                        title="Remove student"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">
+                        Student Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={st.name}
+                        onChange={(e) => updateStudent(st.id, 'name', e.target.value)}
+                        placeholder={`e.g. ${index === 0 ? 'Abrar Fahim' : 'Sadia Fahim'}`}
+                        className="w-full h-9 px-3 rounded-xl bg-slate-900 border border-white/[0.08] text-xs text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">
+                        Class / Grade * (Can differ)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={st.classGrade}
+                        onChange={(e) => updateStudent(st.id, 'classGrade', e.target.value)}
+                        placeholder="e.g. Class 9, HSC, Class 7"
+                        className="w-full h-9 px-3 rounded-xl bg-slate-900 border border-white/[0.08] text-xs text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Subjects (comma-separated) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={st.subjects}
+                      onChange={(e) => updateStudent(st.id, 'subjects', e.target.value)}
+                      placeholder="e.g. Physics, Higher Math"
+                      className="w-full h-9 px-3 rounded-xl bg-slate-900 border border-white/[0.08] text-xs text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
-              Subjects (comma separated) *
-            </label>
+            <label className="block text-xs text-slate-400 mb-1">Monthly Fee (Total BDT) *</label>
             <input
-              type="text"
+              type="number"
               required
-              value={subjects}
-              onChange={(e) => setSubjects(e.target.value)}
-              placeholder="e.g. Physics, Higher Math, ICT"
+              value={monthlyFee}
+              onChange={(e) => setMonthlyFee(e.target.value)}
+              placeholder="8000"
               className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Monthly Fee (BDT) *</label>
-              <input
-                type="number"
-                required
-                value={monthlyFee}
-                onChange={(e) => setMonthlyFee(e.target.value)}
-                placeholder="8000"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
+          {/* Cycle Type Selector (Weekly vs Monthly) */}
+          <div className="pt-1">
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Cycle Schedule Type *
+            </label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 border border-white/[0.08] rounded-xl mb-3">
+              <button
+                type="button"
+                onClick={() => setCycleType('WEEKLY')}
+                className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  cycleType === 'WEEKLY'
+                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Weekly Cycle</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCycleType('MONTHLY')}
+                className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  cycleType === 'MONTHLY'
+                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                <span>Monthly Cycle</span>
+              </button>
             </div>
 
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Days Per Cycle *</label>
-              <input
-                type="number"
-                required
-                value={targetDays}
-                onChange={(e) => setTargetDays(e.target.value)}
-                placeholder="12"
-                className="w-full h-10 px-3 rounded-xl bg-slate-950 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
+            {/* Respective Option Display */}
+            {cycleType === 'WEEKLY' ? (
+              <div className="p-3.5 rounded-xl bg-slate-950/70 border border-emerald-500/20 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-300 font-medium">
+                    Choose Class Days (Weekly):
+                  </span>
+                  <span className="text-[11px] font-mono text-emerald-400">
+                    {selectedWeeklyDays.length} days/week ({selectedWeeklyDays.length * 4} classes/cycle)
+                  </span>
+                </div>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {ALL_WEEK_DAYS.map((day) => {
+                    const isSelected = selectedWeeklyDays.includes(day.id);
+                    return (
+                      <button
+                        key={day.id}
+                        type="button"
+                        onClick={() => toggleDay(day.id)}
+                        className={`h-9 rounded-lg text-xs font-bold transition-all cursor-pointer flex flex-col items-center justify-center border ${
+                          isSelected
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                            : 'bg-slate-900 border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.15]'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Selected: {selectedWeeklyDays.length > 0 ? selectedWeeklyDays.join(', ') : 'None'}. Cycle completes every {selectedWeeklyDays.length * 4} classes.
+                </p>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-xl bg-slate-950/70 border border-emerald-500/20 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-slate-300 font-medium">
+                    Monthly Days / Classes Per Cycle *
+                  </label>
+                  <span className="text-[11px] font-mono text-emerald-400">
+                    {targetDays} days / month
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={31}
+                    value={targetDays}
+                    onChange={(e) => setTargetDays(e.target.value)}
+                    placeholder="e.g. 12"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-900 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {['8', '10', '12', '16', '20', '24'].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setTargetDays(d)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border ${
+                          targetDays === d
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                            : 'bg-slate-900 border-white/[0.06] text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {d}d
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Tuition billing cycle auto-completes and renews every {targetDays || 12} logged classes.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="pt-2 border-t border-white/[0.05]">
@@ -652,7 +913,16 @@ function LogSessionModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const student = tuition.students[0] || { name: 'Student', subjects: ['General'] };
+  const studentNames = tuition.students.map((s) => s.name).join(' & ') || 'Student';
+
+  // Attendance map for all students in this tuition: { [studentId]: 'PRESENT' | 'ABSENT' | 'LATE' }
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, 'PRESENT' | 'ABSENT' | 'LATE'>>(() => {
+    const initial: Record<string, 'PRESENT' | 'ABSENT' | 'LATE'> = {};
+    tuition.students.forEach((s) => {
+      if (s._id) initial[s._id] = 'PRESENT';
+    });
+    return initial;
+  });
 
   // Fetch Next-Day Memory Prefill
   const { data: prefill, isLoading: isPrefillLoading } = useQuery<MemoryPrefill>({
@@ -681,23 +951,24 @@ function LogSessionModal({
     setError(null);
 
     try {
+      // Build session entries for all students in this contract
+      const sessionEntries = tuition.students.map((st) => ({
+        studentId: st._id || tuition.students[0]._id,
+        attendance: attendanceMap[st._id!] || 'PRESENT',
+        subject: st.subjects?.[0] || 'General',
+        topicsTaught: topicsTaught.trim(),
+        unfinishedTopics: unfinishedTopics.trim() || undefined,
+        homeworkAssigned: homeworkAssigned.trim() || undefined,
+        previousHomeworkStatus: homeworkStatus,
+      }));
+
       await api.post(`/tuitions/${tuition._id}/sessions`, {
         clientRequestId: `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         sessionDate: new Date(date).toISOString(),
         sessionLocalDate: date,
         durationMinutes: parseInt(duration, 10) || 90,
         sessionType: 'REGULAR',
-        entries: [
-          {
-            studentId: student._id || tuition.students[0]._id,
-            attendance: 'PRESENT',
-            subject: student.subjects[0] || 'General',
-            topicsTaught: topicsTaught.trim(),
-            unfinishedTopics: unfinishedTopics.trim() || undefined,
-            homeworkAssigned: homeworkAssigned.trim() || undefined,
-            previousHomeworkStatus: homeworkStatus,
-          },
-        ],
+        entries: sessionEntries,
         guardianVisibleRemarks: remarks.trim() || undefined,
       });
 
@@ -726,7 +997,7 @@ function LogSessionModal({
             DAY {tuition.currentCycle.completedDays + 1} LOGGING
           </span>
         </div>
-        <h3 className="text-xl font-bold text-white mb-1">Log Daily Session: {student.name}</h3>
+        <h3 className="text-xl font-bold text-white mb-1">Log Daily Session: {studentNames}</h3>
 
         {/* Next-Day Memory Highlight Card */}
         {isPrefillLoading ? (
@@ -785,6 +1056,55 @@ function LogSessionModal({
               />
             </div>
           </div>
+
+          {/* Multiple Students Attendance Selector */}
+          {tuition.students.length > 1 && (
+            <div className="p-3.5 rounded-xl bg-slate-950/70 border border-white/[0.08] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                  <Users className="h-4 w-4 text-emerald-400" />
+                  <span>Student Attendance ({tuition.students.length} Students):</span>
+                </label>
+                <span className="text-[10px] text-slate-400">P = Present, A = Absent, L = Late</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {tuition.students.map((st) => {
+                  const currentStatus = attendanceMap[st._id!] || 'PRESENT';
+                  return (
+                    <div
+                      key={st._id}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900 border border-white/[0.05]"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="text-xs font-bold text-white truncate">{st.name}</p>
+                        <p className="text-[10px] text-slate-400">{st.classGrade}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {(['PRESENT', 'ABSENT', 'LATE'] as const).map((status) => (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() => setAttendanceMap((prev) => ({ ...prev, [st._id!]: status }))}
+                            className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
+                              currentStatus === status
+                                ? status === 'PRESENT'
+                                  ? 'bg-emerald-500 text-slate-950 font-bold'
+                                  : status === 'ABSENT'
+                                  ? 'bg-rose-500 text-white font-bold'
+                                  : 'bg-amber-500 text-slate-950 font-bold'
+                                : 'bg-slate-800 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            {status === 'PRESENT' ? 'Present' : status === 'ABSENT' ? 'Absent' : 'Late'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs text-slate-400 mb-1">Topics Taught Today *</label>
@@ -1149,7 +1469,7 @@ function GuardianShareModal({
 
             <a
               href={`https://wa.me/?text=${encodeURIComponent(
-                `Hello! Here is the progress and attendance tracking link for ${tuition.students[0]?.name}: ${fullUrl}\nAccess PIN: ${pin}`
+                `Hello! Here is the progress and attendance tracking link for ${tuition.students.map((s) => s.name).join(' & ')}: ${fullUrl}\nAccess PIN: ${pin}`
               )}`}
               target="_blank"
               rel="noreferrer"

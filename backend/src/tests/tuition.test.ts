@@ -254,7 +254,7 @@ describe('Tuition Engine & Next-Day Memory Prefill Test Suite', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.shareToken).toHaveLength(64);
     expect(res.body.data.accessPin).toBe('4321');
-    expect(res.body.data.linkUrl).toContain('/guardian?token=');
+    expect(res.body.data.linkUrl).toContain('/guardian/view/');
 
     // In DB, token & PIN must be securely hashed
     const tuition = await Tuition.findById(createdTuitionId);
@@ -262,5 +262,45 @@ describe('Tuition Engine & Next-Day Memory Prefill Test Suite', () => {
     expect(tuition?.guardianAccess.shareTokenHash).not.toBe(res.body.data.shareToken);
     expect(tuition?.guardianAccess.accessPinHash).toBeDefined();
     expect(tuition?.guardianAccess.accessPinHash).not.toBe('4321');
+  });
+
+  it('POST /tuitions creates a tuition with multiple students from different/same classes', async () => {
+    const res = await request(app)
+      .post('/api/v1/tuitions')
+      .set('Cookie', [`th_access_token=${teacherToken}`])
+      .set('X-Requested-With', 'tutorhub')
+      .send({
+        students: [
+          {
+            name: 'Sadia Khan',
+            classGrade: 'Class 8',
+            subjects: ['General Science', 'Math'],
+          },
+          {
+            name: 'Sami Khan',
+            classGrade: 'Class 10',
+            subjects: ['Physics', 'Chemistry'],
+          },
+        ],
+        scheduleConfig: {
+          billingModel: BillingModel.FIXED_WEEKLY,
+          targetDaysPerCycle: 12,
+          weeklyDays: [WeekDay.SAT, WeekDay.MON, WeekDay.WED],
+          durationMinutes: 90,
+        },
+        monthlyFee: 15000,
+        guardianName: 'Mrs. Khan',
+        guardianPhone: '01799887766',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.tuition.students).toHaveLength(2);
+    expect(res.body.data.tuition.students[0].name).toBe('Sadia Khan');
+    expect(res.body.data.tuition.students[0].classGrade).toBe('Class 8');
+    expect(res.body.data.tuition.students[1].name).toBe('Sami Khan');
+    expect(res.body.data.tuition.students[1].classGrade).toBe('Class 10');
+    expect(res.body.data.tuition.title).toContain('Sadia Khan, Sami Khan');
+    expect(res.body.data.tuition.title).toContain('Class 8, Class 10');
   });
 });
