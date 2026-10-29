@@ -32,18 +32,25 @@ const createTransporter = () => {
   const sanitizedUser = cleanCredential(env.SMTP_USER);
   const sanitizedPass = cleanPass(env.SMTP_PASS);
   const sanitizedHost = cleanCredential(env.SMTP_HOST) || 'smtp.gmail.com';
-  const port = Number(env.SMTP_PORT) || 587;
+  const port = Number(env.SMTP_PORT) || 465;
 
   const isGmail =
     sanitizedHost.includes('gmail.com') ||
     (sanitizedUser && sanitizedUser.toLowerCase().endsWith('@gmail.com'));
 
+  const isSecure = port === 465 || env.SMTP_SECURE;
+
   if (isGmail && sanitizedUser && sanitizedPass) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: isSecure ? 465 : (port || 587),
+      secure: isSecure,
       auth: {
         user: sanitizedUser,
         pass: sanitizedPass,
+      },
+      tls: {
+        rejectUnauthorized: true,
       },
       connectionTimeout: 8000,
       greetingTimeout: 8000,
@@ -54,8 +61,11 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: sanitizedHost,
     port,
-    secure: env.SMTP_SECURE,
+    secure: isSecure,
     auth: sanitizedUser && sanitizedPass ? { user: sanitizedUser, pass: sanitizedPass } : undefined,
+    tls: {
+      rejectUnauthorized: true,
+    },
     connectionTimeout: 8000,
     greetingTimeout: 8000,
     socketTimeout: 10000,
