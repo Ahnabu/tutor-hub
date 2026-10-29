@@ -4,6 +4,7 @@ export const HARDCODED_ORIGINS = [
   'https://tutor-hub-khaki.vercel.app',
   'https://tutorhub.vercel.app',
   'https://tutor-hub.vercel.app',
+  'https://backend-five-rosy-71.vercel.app',
   'http://localhost:3000',
   'http://localhost:5000',
   'http://127.0.0.1:3000',

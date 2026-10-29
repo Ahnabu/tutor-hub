@@ -53,7 +53,8 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Handle preflight for all endpoints
+app.options(/(.*)/, cors(corsOptions));
 
 // 2. Cookie & Body Parsers with limits
 app.use(cookieParser(env.COOKIE_SECRET));
@@ -110,8 +111,8 @@ app.use(`${env.API_PREFIX}/admin`, adminRoutes);
 // 7. Central Error Handler
 app.use(errorHandler);
 
-// Boot server if not in test mode
-if (env.NODE_ENV !== 'test') {
+// Boot server if not in test mode and not in serverless runtime (e.g. Vercel)
+if (env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   connectDatabase()
     .then(() => {
       EmailWorker.start();
