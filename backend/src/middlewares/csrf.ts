@@ -27,10 +27,18 @@ export const csrfProtection = (req: Request, _res: Response, next: NextFunction)
     );
   }
 
-  // 2. Origin validation if provided
-  const origin = req.headers.origin;
-  if (origin && env.NODE_ENV === 'production') {
-    if (!isAllowedOrigin(origin)) {
+  // 2. Origin / Referer validation in production
+  if (env.NODE_ENV === 'production') {
+    let sourceOrigin = req.headers.origin;
+    if (!sourceOrigin && req.headers.referer) {
+      try {
+        sourceOrigin = new URL(req.headers.referer).origin;
+      } catch {
+        return next(new ForbiddenError('Invalid Referer header', 'CSRF_ORIGIN_INVALID'));
+      }
+    }
+
+    if (!sourceOrigin || !isAllowedOrigin(sourceOrigin)) {
       return next(
         new ForbiddenError('Cross-origin request rejected', 'CSRF_ORIGIN_INVALID')
       );

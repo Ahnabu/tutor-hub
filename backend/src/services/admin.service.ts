@@ -24,27 +24,39 @@ export class AdminService {
    */
   static async getPlatformStats(): Promise<Record<string, number>> {
     const [
-      totalUsers,
-      totalTeachers,
-      verifiedTeachers,
-      pendingVerifications,
-      totalGuardians,
+      userFacetResult,
       totalTuitions,
       activeTuitions,
       totalSessions,
       openMarketplacePosts,
     ] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ roles: UserRole.TEACHER }),
-      User.countDocuments({
-        roles: UserRole.TEACHER,
-        'teacherProfile.verificationStatus': VerificationStatus.VERIFIED,
-      }),
-      User.countDocuments({
-        roles: UserRole.TEACHER,
-        'teacherProfile.verificationStatus': VerificationStatus.PENDING,
-      }),
-      User.countDocuments({ roles: UserRole.GUARDIAN }),
+      User.aggregate([
+        {
+          $facet: {
+            totalUsers: [{ $count: 'count' }],
+            totalTeachers: [{ $match: { roles: UserRole.TEACHER } }, { $count: 'count' }],
+            verifiedTeachers: [
+              {
+                $match: {
+                  roles: UserRole.TEACHER,
+                  'teacherProfile.verificationStatus': VerificationStatus.VERIFIED,
+                },
+              },
+              { $count: 'count' },
+            ],
+            pendingVerifications: [
+              {
+                $match: {
+                  roles: UserRole.TEACHER,
+                  'teacherProfile.verificationStatus': VerificationStatus.PENDING,
+                },
+              },
+              { $count: 'count' },
+            ],
+            totalGuardians: [{ $match: { roles: UserRole.GUARDIAN } }, { $count: 'count' }],
+          },
+        },
+      ]),
       Tuition.countDocuments(),
       Tuition.countDocuments({
         status: TuitionStatus.ACTIVE,
@@ -57,12 +69,13 @@ export class AdminService {
       }),
     ]);
 
+    const uf = userFacetResult[0] || {};
     return {
-      totalUsers,
-      totalTeachers,
-      verifiedTeachers,
-      pendingVerifications,
-      totalGuardians,
+      totalUsers: uf.totalUsers?.[0]?.count || 0,
+      totalTeachers: uf.totalTeachers?.[0]?.count || 0,
+      verifiedTeachers: uf.verifiedTeachers?.[0]?.count || 0,
+      pendingVerifications: uf.pendingVerifications?.[0]?.count || 0,
+      totalGuardians: uf.totalGuardians?.[0]?.count || 0,
       totalTuitions,
       activeTuitions,
       totalSessions,

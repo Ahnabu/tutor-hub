@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
+import { ChangePasswordForm } from '@/components/ChangePasswordForm';
 import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import {
   User,
@@ -124,8 +125,7 @@ export default function ProfilePage() {
     try {
       await api.post('/auth/delete-account');
       showSuccessToast('Account deactivated and unpublished from database.');
-      logout();
-      router.push('/');
+      await logout('/');
     } catch (err: unknown) {
       showErrorToast(err, 'Failed to unpublish account.');
       setDeletingAccount(false);
@@ -384,120 +384,7 @@ export default function ProfilePage() {
         )}
 
         {/* SECURITY & PASSWORD CHANGE SECTION */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl space-y-5">
-          <div className="flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-white">Account Security & Password</h2>
-          </div>
-
-          <form onSubmit={handleChangePassword} className="space-y-4 max-w-xl">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Current Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  required
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter your current password"
-                  className="w-full pl-3.5 pr-10 py-2.5 bg-slate-950 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                  aria-label="Toggle current password visibility"
-                >
-                  {showCurrentPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  New Password (Min. 8 chars)
-                </label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password"
-                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-950 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                    aria-label="Toggle new password visibility"
-                  >
-                    {showNewPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
-                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-950 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                    aria-label="Toggle confirm password visibility"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={changingPassword || !currentPassword || !newPassword}
-              className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {changingPassword && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>Update Password</span>
-            </button>
-          </form>
-
-          {/* Session Management */}
-          <div className="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xs font-bold text-white">Remote Device Sessions</h3>
-              <p className="text-[11px] text-slate-400">
-                Revoke all active refresh tokens and sign out of TutorHub on all other phones and computers.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleLogoutAll}
-              disabled={loggingOutAll}
-              className="h-9 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-2 border border-white/[0.08] transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {loggingOutAll && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>Sign Out All Other Devices</span>
-            </button>
-          </div>
-        </div>
+        <ChangePasswordForm />
 
         {/* PRIVACY & DATA SELF-SERVICE */}
         <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl space-y-4">
@@ -561,9 +448,8 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => {
-                  logout();
+                  logout('/');
                   showSuccessToast('Logged out successfully.');
-                  router.push('/');
                 }}
                 className="flex-1 sm:flex-initial h-11 px-6 rounded-xl bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 transition-all cursor-pointer"
               >

@@ -12,6 +12,7 @@ import {
 } from '../enums/index.js';
 import { sha256, hashPassword } from '../utils/crypto.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
+import { withOptionalTransaction } from '../utils/transaction.js';
 
 export interface CreateTuitionInput {
   title?: string;
@@ -162,11 +163,14 @@ export class TuitionService {
     teacherId: string,
     status?: TuitionStatus
   ): Promise<ITuition[]> {
-    const filter: any = { teacherId: new mongoose.Types.ObjectId(teacherId) };
+    const filter: any = {
+      teacherId: new mongoose.Types.ObjectId(teacherId),
+      deletedAt: { $exists: false },
+    };
     if (status) {
       filter.status = status;
     }
-    return Tuition.find(filter).sort({ updatedAt: -1 });
+    return Tuition.find(filter).sort({ updatedAt: -1 }).limit(100);
   }
 
   /**
@@ -176,7 +180,10 @@ export class TuitionService {
     teacherId: string,
     tuitionId: string
   ): Promise<ITuition> {
-    const tuition = await Tuition.findById(tuitionId);
+    const tuition = await Tuition.findOne({
+      _id: tuitionId,
+      deletedAt: { $exists: false },
+    });
     if (!tuition) {
       throw new NotFoundError('Tuition agreement not found');
     }
@@ -265,60 +272,74 @@ export class TuitionService {
     tuitionId: string,
     input: RecordPaymentInput
   ): Promise<ITuition> {
-    const tuition = await this.getTuitionById(teacherId, tuitionId);
+    return withOptionalTransaction(async (session) => {
+      const tuition = await Tuition.findOne({
+        _id: tuitionId,
+        deletedAt: { $exists: false },
+      }).session(session ?? null);
+      if (!tuition) {
+        throw new NotFoundError('Tuition agreement not found');
+      }
+      if (tuition.teacherId.toString() !== teacherId) {
+        throw new ForbiddenError('You do not have access to this tuition agreement');
+      }
 
-    const paidAt = input.paidAt ? new Date(input.paidAt) : new Date();
+      const paidAt = input.paidAt ? new Date(input.paidAt) : new Date();
 
-    // 1. Append payment record to payments
-    tuition.payments.push({
-      amount: input.amount,
-      method: input.method,
-      paidAt,
-      reference: input.reference,
-      note: input.note,
-      recordedAt: new Date(),
-    });
-
-    // 2. Update current cycle payment totals
-    tuition.currentCycle.amountPaid += input.amount;
-    if (tuition.currentCycle.amountPaid >= tuition.currentCycle.monthlyFee) {
-      tuition.currentCycle.paymentStatus = PaymentStatus.PAID;
-    } else if (tuition.currentCycle.amountPaid > 0) {
-      tuition.currentCycle.paymentStatus = PaymentStatus.PARTIAL;
-    }
-
-    // 3. Advance cycle if requested
-    if (input.advanceCycle) {
-      // Archive current cycle into CycleHistory
-      await CycleHistory.create({
-        tuitionId: tuition._id,
-        cycleNumber: tuition.currentCycle.cycleNumber,
-        startDate: tuition.currentCycle.cycleStartDate,
-        endDate: new Date(),
-        feeCharged: tuition.currentCycle.monthlyFee,
-        amountPaid: tuition.currentCycle.amountPaid,
-        paymentsSnapshot: tuition.payments,
-        closedBy: tuition.teacherId,
-        totalRegularDays: tuition.currentCycle.completedDays,
-        totalExtraDays: tuition.currentCycle.extraClassesCount,
+      // 1. Append payment record to payments
+      tuition.payments.push({
+        amount: input.amount,
+        method: input.method,
+        paidAt,
+        reference: input.reference,
+        note: input.note,
+        recordedAt: new Date(),
       });
 
-      // Reset for next cycle
-      tuition.currentCycle = {
-        cycleNumber: tuition.currentCycle.cycleNumber + 1,
-        completedDays: 0,
-        extraClassesCount: 0,
-        cycleStartDate: new Date(),
-        readyToClose: false,
-        monthlyFee: tuition.currentCycle.monthlyFee,
-        paymentStatus: PaymentStatus.PENDING,
-        amountPaid: 0,
-      };
-      tuition.payments = [];
-    }
+      // 2. Update current cycle payment totals
+      tuition.currentCycle.amountPaid += input.amount;
+      if (tuition.currentCycle.amountPaid >= tuition.currentCycle.monthlyFee) {
+        tuition.currentCycle.paymentStatus = PaymentStatus.PAID;
+      } else if (tuition.currentCycle.amountPaid > 0) {
+        tuition.currentCycle.paymentStatus = PaymentStatus.PARTIAL;
+      }
 
-    await tuition.save();
-    return tuition;
+      // 3. Advance cycle if requested
+      if (input.advanceCycle) {
+        await CycleHistory.create(
+          [
+            {
+              tuitionId: tuition._id,
+              cycleNumber: tuition.currentCycle.cycleNumber,
+              startDate: tuition.currentCycle.cycleStartDate,
+              endDate: new Date(),
+              feeCharged: tuition.currentCycle.monthlyFee,
+              amountPaid: tuition.currentCycle.amountPaid,
+              paymentsSnapshot: tuition.payments,
+              closedBy: tuition.teacherId,
+              totalRegularDays: tuition.currentCycle.completedDays,
+              totalExtraDays: tuition.currentCycle.extraClassesCount,
+            },
+          ],
+          { session }
+        );
+
+        tuition.currentCycle = {
+          cycleNumber: tuition.currentCycle.cycleNumber + 1,
+          completedDays: 0,
+          extraClassesCount: 0,
+          cycleStartDate: new Date(),
+          readyToClose: false,
+          monthlyFee: tuition.currentCycle.monthlyFee,
+          paymentStatus: PaymentStatus.PENDING,
+          amountPaid: 0,
+        };
+        tuition.payments = [];
+      }
+
+      await tuition.save({ session });
+      return tuition;
+    });
   }
 
   /**

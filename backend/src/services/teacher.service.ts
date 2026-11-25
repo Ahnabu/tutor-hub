@@ -4,6 +4,7 @@ import { TeacherPrivateProfile } from '../models/TeacherPrivateProfile.js';
 import { UserRole, AccountStatus, VerificationStatus, ContactVisibilityMode } from '../enums/index.js';
 import { toPublicTeacherDTO, IPublicTeacherDTO, toUserDTO, IUserDTO } from '../dtos/user.dto.js';
 import { NotFoundError, BadRequestError } from '../utils/errors.js';
+import { escapeRegex } from '../utils/sanitize.js';
 
 export interface UpdateTeacherProfileInput {
   isPublic?: boolean;
@@ -127,18 +128,18 @@ export class TeacherService {
 
     if (filters.subject) {
       query['teacherProfile.subjectsOffered'] = {
-        $regex: new RegExp(filters.subject, 'i'),
+        $regex: new RegExp(escapeRegex(filters.subject), 'i'),
       };
     }
 
     if (filters.area) {
       query['teacherProfile.preferredAreas'] = {
-        $regex: new RegExp(filters.area, 'i'),
+        $regex: new RegExp(escapeRegex(filters.area), 'i'),
       };
     }
 
     if (filters.search) {
-      const searchRegex = new RegExp(filters.search, 'i');
+      const searchRegex = new RegExp(escapeRegex(filters.search), 'i');
       query.$or = [
         { name: searchRegex },
         { 'teacherProfile.institution': searchRegex },

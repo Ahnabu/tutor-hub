@@ -110,20 +110,21 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as Error);
-        // Only redirect on browser client if NOT already on a public or auth page
+        // Only redirect on browser client if on a protected dashboard/account page
         if (typeof window !== 'undefined') {
           const pathname = window.location.pathname;
-          const isPublicOrAuthPage =
-            pathname === '/' ||
-            pathname.startsWith('/login') ||
-            pathname.startsWith('/register') ||
-            pathname.startsWith('/verify-email') ||
-            pathname.startsWith('/forgot-password') ||
-            pathname.startsWith('/reset-password') ||
-            pathname.startsWith('/claim-guardian') ||
-            pathname.startsWith('/guardian');
+          const isProtectedPage =
+            pathname === '/teacher' ||
+            pathname.startsWith('/teacher/') ||
+            ((pathname === '/guardian' || pathname.startsWith('/guardian/')) &&
+              !pathname.startsWith('/guardian/view')) ||
+            pathname === '/admin' ||
+            pathname.startsWith('/admin/') ||
+            pathname === '/profile' ||
+            pathname.startsWith('/profile/') ||
+            pathname === '/marketplace/create';
 
-          if (!isPublicOrAuthPage) {
+          if (isProtectedPage) {
             // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             window.location.href = '/login?session_expired=true';
           }

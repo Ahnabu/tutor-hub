@@ -322,7 +322,6 @@ function VerifyEmailContent() {
                     />
                     <button
                       type="button"
-                      tabIndex={-1}
                       onClick={() => setShowNewPassword(!showNewPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
                       aria-label="Toggle password visibility"
@@ -347,7 +346,6 @@ function VerifyEmailContent() {
                     />
                     <button
                       type="button"
-                      tabIndex={-1}
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
                       aria-label="Toggle confirm password visibility"
@@ -446,9 +444,9 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="h-screen max-h-screen overflow-hidden bg-[#090D16] text-[#F8FAFC] flex flex-col">
+    <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col">
       <Navbar />
-      <main className="flex-1 overflow-hidden flex items-center justify-center p-3 sm:p-4 relative">
+      <main className="flex-1 flex items-center justify-center p-3 sm:p-4 relative">
         <Suspense fallback={<div className="text-slate-400 text-sm">Loading verification...</div>}>
           <VerifyEmailContent />
         </Suspense>

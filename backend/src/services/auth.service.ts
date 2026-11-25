@@ -131,7 +131,6 @@ export class AuthService {
   static async verifyEmail(
     email: string,
     otp: string,
-    newPassword?: string,
     userAgent?: string,
     ip?: string
   ): Promise<IAuthResult> {
@@ -168,12 +167,6 @@ export class AuthService {
       user.otpAttempts = (user.otpAttempts || 0) + 1;
       await user.save();
       throw new BadRequestError('Invalid verification code', 'INVALID_OTP');
-    }
-
-    // Optionally update password if requested upon verification
-    if (newPassword) {
-      user.passwordHash = await hashPassword(newPassword);
-      user.tokenVersion = (user.tokenVersion || 0) + 1;
     }
 
     // Activate user
@@ -322,22 +315,32 @@ export class AuthService {
     }
 
     const tokenHash = sha256(refreshTokenRaw);
-    const session = await RefreshSession.findOne({ tokenHash });
+    const provisionalNewRefreshToken = signRefreshToken({
+      sub: payload.sub,
+      familyId: payload.familyId,
+    });
+    const newHash = sha256(provisionalNewRefreshToken);
+
+    // Atomically claim & revoke the presented refresh session
+    const session = await RefreshSession.findOneAndUpdate(
+      { tokenHash, revokedAt: { $exists: false } },
+      { $set: { revokedAt: new Date(), replacedBy: newHash } },
+      { new: false }
+    );
 
     if (!session) {
-      throw new UnauthorizedError('Session not found or expired', 'SESSION_NOT_FOUND');
-    }
+      const existingSession = await RefreshSession.findOne({ tokenHash }).lean();
+      if (!existingSession) {
+        throw new UnauthorizedError('Session not found or expired', 'SESSION_NOT_FOUND');
+      }
 
-    // THEFT DETECTION: If a revoked token is presented again, revoke entire family!
-    if (session.revokedAt) {
-      console.warn(`🚨 SECURITY ALERT: Revoked refresh token reuse detected for family ${session.familyId}!`);
-      // Invalidate all sessions in this family
+      // THEFT DETECTION: If an already-revoked token is presented again, revoke entire family!
+      console.warn(`🚨 SECURITY ALERT: Revoked refresh token reuse detected for family ${existingSession.familyId}!`);
       await RefreshSession.updateMany(
-        { familyId: session.familyId },
+        { familyId: existingSession.familyId },
         { revokedAt: new Date() }
       );
-      // Increment user tokenVersion to invalidate any active access tokens
-      await User.findByIdAndUpdate(session.userId, { $inc: { tokenVersion: 1 } });
+      await User.findByIdAndUpdate(existingSession.userId, { $inc: { tokenVersion: 1 } });
       throw new UnauthorizedError('Security breach detected: Token reuse. Please log in again.', 'TOKEN_REUSED');
     }
 
@@ -345,17 +348,6 @@ export class AuthService {
     if (!user || user.accountStatus !== AccountStatus.ACTIVE) {
       throw new UnauthorizedError('User account not active', 'ACCOUNT_INACTIVE');
     }
-
-    // Invalidate old session
-    const newRefreshTokenRaw = signRefreshToken({
-      sub: user._id.toString(),
-      familyId: session.familyId,
-    });
-    const newHash = sha256(newRefreshTokenRaw);
-
-    session.revokedAt = new Date();
-    session.replacedBy = newHash;
-    await session.save();
 
     // Create new session in the same family
     await RefreshSession.create({
@@ -375,7 +367,7 @@ export class AuthService {
 
     return {
       accessToken: newAccessToken,
-      refreshToken: newRefreshTokenRaw,
+      refreshToken: provisionalNewRefreshToken,
       user: toUserDTO(user),
     };
   }
@@ -573,6 +565,13 @@ export class AuthService {
 
     if (!user.otpHash || !user.otpExpiresAt || user.otpExpiresAt < new Date()) {
       throw new BadRequestError('Verification code expired. Please restart the claim process.', 'OTP_EXPIRED');
+    }
+
+    if ((user.otpAttempts || 0) >= 5) {
+      throw new ForbiddenError(
+        'Too many failed attempts. Please restart the claim process.',
+        'OTP_ATTEMPTS_EXCEEDED'
+      );
     }
 
     if (sha256(otp) !== user.otpHash) {

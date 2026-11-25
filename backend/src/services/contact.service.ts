@@ -58,7 +58,7 @@ export class ContactService {
       return existingReq;
     }
 
-    const guardian = await User.findById(guardianId);
+    const guardian = await User.findById(guardianId).select('name').lean();
 
     const request = await ContactAccessRequest.create({
       requesterId: new mongoose.Types.ObjectId(guardianId),
@@ -88,10 +88,13 @@ export class ContactService {
       requesterId: new mongoose.Types.ObjectId(guardianId),
     })
       .sort({ createdAt: -1 })
+      .limit(100)
       .lean();
 
     const teacherIds = [...new Set(requests.map((r) => r.targetTeacherId.toString()))];
-    const teachers = await User.find({ _id: { $in: teacherIds } }).lean();
+    const teachers = await User.find({ _id: { $in: teacherIds } })
+      .select('name avatarUrl phone email teacherProfile.institution teacherProfile.slug')
+      .lean();
     const teacherMap = new Map(teachers.map((t) => [t._id.toString(), t]));
 
     // Check grants
@@ -135,14 +138,18 @@ export class ContactService {
       targetTeacherId: new mongoose.Types.ObjectId(teacherId),
     })
       .sort({ createdAt: -1 })
+      .limit(100)
       .lean();
 
     const guardianIds = [...new Set(requests.map((r) => r.requesterId.toString()))];
-    const guardians = await User.find({ _id: { $in: guardianIds } }).lean();
+    const guardians = await User.find({ _id: { $in: guardianIds } })
+      .select('name phone email avatarUrl')
+      .lean();
     const guardianMap = new Map(guardians.map((g) => [g._id.toString(), g]));
 
     return requests.map((r) => {
       const guardian = guardianMap.get(r.requesterId.toString());
+      const isApproved = r.status === ContactRequestStatus.APPROVED;
       return {
         id: r._id.toString(),
         status: r.status,
@@ -152,8 +159,8 @@ export class ContactService {
           ? {
               id: guardian._id.toString(),
               name: guardian.name,
-              phone: guardian.phone,
-              email: guardian.email,
+              phone: isApproved ? guardian.phone : undefined,
+              email: isApproved ? guardian.email : undefined,
               avatarUrl: guardian.avatarUrl,
             }
           : { name: 'Guardian' },
@@ -204,8 +211,8 @@ export class ContactService {
       await AuditLog.create({
         actorId: new mongoose.Types.ObjectId(teacherId),
         action: AuditAction.CONTACT_GRANT_CREATED,
-        targetId: request.requesterId,
-        details: { requestId: request._id },
+        targetId: request.requesterId.toString(),
+        metadata: { requestId: request._id.toString() },
       });
 
       // Notify guardian

@@ -16,7 +16,7 @@ import {
 
 export default function CreateTuitionPostPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -116,6 +116,20 @@ export default function CreateTuitionPostPage() {
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 mb-8 leading-relaxed">
             Describe your student&apos;s academic needs to receive direct applications from verified university tutors across Bangladesh.
           </p>
+
+          {!authLoading && !isAuthenticated && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                You need a Guardian account to publish a tuition requirement.
+              </p>
+              <Link
+                href="/login?redirect=/marketplace/create"
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shrink-0 text-center"
+              >
+                Log In to Post
+              </Link>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-7">
             {/* Post Title */}

@@ -143,12 +143,14 @@ export class EmailService {
    * Helper to send an Email Verification OTP email
    */
   static async sendVerificationOtp(to: string, name: string, otp: string): Promise<void> {
-    console.log(`\n=============================================================`);
-    console.log(`🔑 [TutorHub OTP RESCUE CODE]`);
-    console.log(`   To: ${to} (${name})`);
-    console.log(`   Verification OTP: [ ${otp} ]`);
-    console.log(`   Valid for: 15 minutes`);
-    console.log(`=============================================================\n`);
+    if (env.NODE_ENV !== 'production') {
+      console.log(`\n=============================================================`);
+      console.log(`🔑 [TutorHub OTP RESCUE CODE]`);
+      console.log(`   To: ${to} (${name})`);
+      console.log(`   Verification OTP: [ ${otp} ]`);
+      console.log(`   Valid for: 15 minutes`);
+      console.log(`=============================================================\n`);
+    }
 
     const subject = `${otp} is your TutorHub verification code`;
     const html = `
@@ -172,12 +174,14 @@ export class EmailService {
    */
   static async sendPasswordReset(to: string, name: string, resetToken: string): Promise<void> {
     const resetUrl = `${env.CORS_ORIGIN}/reset-password?token=${resetToken}`;
-    console.log(`\n=============================================================`);
-    console.log(`🔑 [TutorHub PASSWORD RESET RESCUE LINK]`);
-    console.log(`   To: ${to} (${name})`);
-    console.log(`   Reset URL: ${resetUrl}`);
-    console.log(`   Valid for: 1 hour`);
-    console.log(`=============================================================\n`);
+    if (env.NODE_ENV !== 'production') {
+      console.log(`\n=============================================================`);
+      console.log(`🔑 [TutorHub PASSWORD RESET RESCUE LINK]`);
+      console.log(`   To: ${to} (${name})`);
+      console.log(`   Reset URL: ${resetUrl}`);
+      console.log(`   Valid for: 1 hour`);
+      console.log(`=============================================================\n`);
+    }
     const subject = 'Reset your TutorHub password';
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #090D16; color: #F8FAFC; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">

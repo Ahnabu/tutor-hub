@@ -19,6 +19,17 @@ export const errorHandler = (
     return;
   }
 
+  // Handle Mongoose CastError (invalid ObjectId)
+  if (err.name === 'CastError') {
+    res.status(400).json({
+      error: {
+        code: 'INVALID_ID',
+        message: 'Invalid resource identifier format.',
+      },
+    });
+    return;
+  }
+
   // Handle Mongoose duplicate key errors (code 11000)
   if ((err as any).code === 11000) {
     const field = Object.keys((err as any).keyValue || {})[0] || 'field';

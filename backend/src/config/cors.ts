@@ -31,13 +31,8 @@ export const isAllowedOrigin = (origin?: string): boolean => {
     return true;
   }
 
-  // Unconditionally allow ANY Vercel deployment (preview branches, production, custom domains)
-  if (/^https:\/\/[a-zA-Z0-9._-]+\.vercel\.app$/.test(cleanOrigin)) {
-    return true;
-  }
-
-  // Allow localhost & local network IPs
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
+  // Allow localhost & local network IPs in non-production
+  if (env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
     return true;
   }
 

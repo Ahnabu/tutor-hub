@@ -21,11 +21,10 @@ export class AuthController {
 
   static async verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { email, otp, newPassword } = req.body;
+      const { email, otp } = req.body;
       const result = await AuthService.verifyEmail(
         email,
         otp,
-        newPassword,
         req.headers['user-agent'],
         req.ip
       );

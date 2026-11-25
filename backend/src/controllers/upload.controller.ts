@@ -67,6 +67,16 @@ export class UploadController {
         return;
       }
 
+      const mimeMatch = /^data:(image\/(?:jpeg|png|webp)|application\/pdf);base64,/.exec(fileData);
+      if (!mimeMatch) {
+        res.status(400).json({
+          error: {
+            message: 'Unsupported file format. Only JPEG, PNG, WebP, or PDF base64 data URIs are allowed.',
+          },
+        });
+        return;
+      }
+
       // Check approx base64 size (3 MB max)
       const approxBytes = (fileData.length * 3) / 4;
       if (approxBytes > 3.2 * 1024 * 1024) {
@@ -78,6 +88,7 @@ export class UploadController {
       const uploadOptions: Record<string, unknown> = {
         folder,
         resource_type: 'auto',
+        type: 'authenticated',
       };
 
       try {
@@ -96,12 +107,13 @@ export class UploadController {
         console.error('Cloudinary Direct Upload Error:', cloudErr);
         const errMessage = (cloudErr as { message?: string })?.message || '';
 
-        // If Cloudinary credentials are mock or invalid in development, provide safe fallback
+        // If Cloudinary credentials are mock or invalid in non-production, provide safe fallback
         if (
-          errMessage.includes('Invalid cloud_name') ||
-          errMessage.includes('Must supply') ||
-          env.CLOUDINARY_CLOUD_NAME.includes('mock') ||
-          env.CLOUDINARY_CLOUD_NAME.includes('tutor-hub')
+          env.NODE_ENV !== 'production' &&
+          (errMessage.includes('Invalid cloud_name') ||
+            errMessage.includes('Must supply') ||
+            env.CLOUDINARY_CLOUD_NAME.includes('mock') ||
+            env.CLOUDINARY_CLOUD_NAME.includes('tutor-hub'))
         ) {
           const mockPublicId = `doc-${Date.now()}`;
           const mockUrl = `https://res.cloudinary.com/demo/image/upload/v1/${mockPublicId}.jpg`;

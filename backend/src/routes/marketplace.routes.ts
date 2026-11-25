@@ -26,6 +26,7 @@ router.get('/posts/:id', MarketplaceController.getPostById);
 router.post(
   '/posts',
   authenticate,
+  authorizeRoles(UserRole.GUARDIAN),
   validateRequest({ body: createMarketplacePostSchema }),
   MarketplaceController.createPost
 );
@@ -34,6 +35,7 @@ router.post(
 router.get(
   '/my-posts',
   authenticate,
+  authorizeRoles(UserRole.GUARDIAN),
   MarketplaceController.getMyPosts
 );
 
@@ -41,6 +43,7 @@ router.get(
 router.patch(
   '/posts/:id/close',
   authenticate,
+  authorizeRoles(UserRole.GUARDIAN),
   MarketplaceController.closePost
 );
 
@@ -65,6 +68,7 @@ router.get(
 router.get(
   '/posts/:id/applications',
   authenticate,
+  authorizeRoles(UserRole.GUARDIAN),
   MarketplaceController.getPostApplications
 );
 
@@ -72,6 +76,7 @@ router.get(
 router.post(
   '/applications/:id/respond',
   authenticate,
+  authorizeRoles(UserRole.GUARDIAN),
   validateRequest({ body: respondMarketplaceApplicationSchema }),
   MarketplaceController.respondToApplication
 );

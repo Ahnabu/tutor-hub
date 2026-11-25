@@ -13,7 +13,9 @@ async function verify() {
     throw new Error('Admin not found in DB!');
   }
 
-  const isPasswordValid = await verifyPassword(admin.passwordHash!, env.ADMIN_PASSWORD);
+  const isPasswordValid = env.ADMIN_PASSWORD
+    ? await verifyPassword(admin.passwordHash!, env.ADMIN_PASSWORD)
+    : false;
   console.log('Admin User Verified:');
   console.log(' - Email:', admin.email);
   console.log(' - Roles:', admin.roles);

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
+import { BottomNav } from '@/components/BottomNav';
+import { Modal } from '@/components/Modal';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -98,7 +100,7 @@ interface IAuditLogItem {
 }
 
 export default function AdminDashboardPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'VERIFICATIONS' | 'TUITIONS' | 'CONFIG' | 'LOGS'>(
     'VERIFICATIONS'
   );
@@ -109,6 +111,10 @@ export default function AdminDashboardPage() {
   const [config, setConfig] = useState<ISystemConfig | null>(null);
   const [logs, setLogs] = useState<IAuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tuitionsLoading, setTuitionsLoading] = useState(false);
+  const [tuitionsLoaded, setTuitionsLoaded] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsLoaded, setLogsLoaded] = useState(false);
 
   // Rejection modal
   const [rejectingTeacherId, setRejectingTeacherId] = useState<string | null>(null);
@@ -140,19 +146,27 @@ export default function AdminDashboardPage() {
 
   const fetchTuitionAudits = useCallback(async () => {
     try {
+      setTuitionsLoading(true);
       const res = await api.get('/admin/tuitions');
       if (res.data?.success) setTuitions(res.data.data.tuitions);
+      setTuitionsLoaded(true);
     } catch {
       toast.error('Could not load tuition audits.');
+    } finally {
+      setTuitionsLoading(false);
     }
   }, []);
 
   const fetchLogs = useCallback(async () => {
     try {
+      setLogsLoading(true);
       const res = await api.get('/admin/audit-logs');
       if (res.data?.success) setLogs(res.data.data.logs);
+      setLogsLoaded(true);
     } catch {
       toast.error('Could not load audit logs.');
+    } finally {
+      setLogsLoading(false);
     }
   }, []);
 
@@ -163,9 +177,9 @@ export default function AdminDashboardPage() {
   }, [isAuthenticated, user, fetchAdminData]);
 
   useEffect(() => {
-    if (activeTab === 'TUITIONS' && tuitions.length === 0) fetchTuitionAudits();
-    if (activeTab === 'LOGS' && logs.length === 0) fetchLogs();
-  }, [activeTab, tuitions.length, logs.length, fetchTuitionAudits, fetchLogs]);
+    if (activeTab === 'TUITIONS' && !tuitionsLoaded && !tuitionsLoading) fetchTuitionAudits();
+    if (activeTab === 'LOGS' && !logsLoaded && !logsLoading) fetchLogs();
+  }, [activeTab, tuitionsLoaded, tuitionsLoading, logsLoaded, logsLoading, fetchTuitionAudits, fetchLogs]);
 
   const handleReviewVerification = async (teacherId: string, action: 'APPROVE' | 'REJECT') => {
     try {
@@ -222,6 +236,22 @@ export default function AdminDashboardPage() {
       toast.error('Could not update contact limit.');
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <div className="h-28 rounded-3xl bg-white/[0.04] animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-32 rounded-2xl bg-white/[0.04] animate-pulse" />
+            <div className="h-32 rounded-2xl bg-white/[0.04] animate-pulse" />
+            <div className="h-32 rounded-2xl bg-white/[0.04] animate-pulse" />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user?.roles?.includes('ADMIN')) {
     return (
@@ -466,10 +496,15 @@ export default function AdminDashboardPage() {
         {/* Tab 2: Tuition Audits */}
         {activeTab === 'TUITIONS' && (
           <div className="space-y-4">
-            {tuitions.length === 0 ? (
+            {tuitionsLoading ? (
+              <div className="p-12 text-center rounded-2xl bg-slate-900/40 border border-white/[0.06]">
+                <BookOpen className="h-10 w-10 text-slate-500 mx-auto mb-3 animate-pulse" />
+                <p className="text-xs text-slate-400">Loading tuition inspection records...</p>
+              </div>
+            ) : tuitions.length === 0 ? (
               <div className="p-12 text-center rounded-2xl bg-slate-900/40 border border-white/[0.06]">
                 <BookOpen className="h-10 w-10 text-slate-500 mx-auto mb-3" />
-                <p className="text-xs text-slate-400">Loading tuition inspection records...</p>
+                <p className="text-xs text-slate-400">No tuition inspection records found.</p>
               </div>
             ) : (
               tuitions.map((t) => (
@@ -559,10 +594,15 @@ export default function AdminDashboardPage() {
         {/* Tab 4: Audit Logs */}
         {activeTab === 'LOGS' && (
           <div className="space-y-3">
-            {logs.length === 0 ? (
+            {logsLoading ? (
+              <div className="p-12 text-center rounded-2xl bg-slate-900/40 border border-white/[0.06]">
+                <Activity className="h-10 w-10 text-slate-500 mx-auto mb-3 animate-pulse" />
+                <p className="text-xs text-slate-400">Loading audit trail records...</p>
+              </div>
+            ) : logs.length === 0 ? (
               <div className="p-12 text-center rounded-2xl bg-slate-900/40 border border-white/[0.06]">
                 <Activity className="h-10 w-10 text-slate-500 mx-auto mb-3" />
-                <p className="text-xs text-slate-400">Loading audit trail records...</p>
+                <p className="text-xs text-slate-400">No audit trail records found.</p>
               </div>
             ) : (
               logs.map((log) => (
@@ -585,15 +625,25 @@ export default function AdminDashboardPage() {
       </main>
 
       {/* Rejection Reason Modal */}
-      {rejectingTeacherId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#0D1322] border border-white/[0.1] rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-2 mb-2 text-rose-400">
+      <Modal
+        isOpen={!!rejectingTeacherId}
+        onClose={() => {
+          setRejectingTeacherId(null);
+          setRejectionReason('');
+        }}
+        titleId="reject-verification-title"
+        maxWidthClass="max-w-md"
+      >
+        {rejectingTeacherId && (
+          <>
+            <div className="flex items-center gap-2 mb-2 text-rose-400 pr-8">
               <AlertTriangle className="h-5 w-5" />
-              <h3 className="text-lg font-bold text-white">Reject Verification</h3>
+              <h3 id="reject-verification-title" className="text-lg font-bold text-white">
+                Reject Verification
+              </h3>
             </div>
             <p className="text-xs text-slate-400 mb-4">
-              Specify why the teacher's credentials could not be verified. This note will be sent directly to the teacher.
+              Specify why the teacher&apos;s credentials could not be verified. This note will be sent directly to the teacher.
             </p>
 
             <textarea
@@ -612,7 +662,7 @@ export default function AdminDashboardPage() {
                   setRejectingTeacherId(null);
                   setRejectionReason('');
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
@@ -620,14 +670,15 @@ export default function AdminDashboardPage() {
                 type="button"
                 disabled={processingAction || !rejectionReason.trim()}
                 onClick={() => handleReviewVerification(rejectingTeacherId, 'REJECT')}
-                className="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-semibold text-xs transition-all disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-semibold text-xs transition-all disabled:opacity-50 cursor-pointer"
               >
                 {processingAction ? 'Submitting...' : 'Confirm Rejection'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
+      <BottomNav />
     </div>
   );
 }

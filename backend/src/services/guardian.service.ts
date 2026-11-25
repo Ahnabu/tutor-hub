@@ -122,7 +122,7 @@ export class GuardianService {
     // Load recent session logs (guardian visible only)
     const sessions = await SessionLog.find({
       tuitionId: tuition._id,
-      isDeleted: false,
+      deletedAt: { $exists: false },
     })
       .sort({ sessionDate: -1 })
       .limit(30)
@@ -143,7 +143,9 @@ export class GuardianService {
     }));
 
     // Load teacher public details
-    const teacher = await User.findById(tuition.teacherId).lean();
+    const teacher = await User.findById(tuition.teacherId)
+      .select('name avatarUrl teacherProfile.institution teacherProfile.verificationStatus')
+      .lean();
 
     return {
       requiresPin: false,
@@ -205,10 +207,13 @@ export class GuardianService {
       deletedAt: { $exists: false },
     })
       .sort({ updatedAt: -1 })
+      .limit(100)
       .lean();
 
     const teacherIds = [...new Set(tuitions.map((t) => t.teacherId.toString()))];
-    const teachers = await User.find({ _id: { $in: teacherIds } }).lean();
+    const teachers = await User.find({ _id: { $in: teacherIds } })
+      .select('name avatarUrl teacherProfile.institution teacherProfile.verificationStatus')
+      .lean();
     const teacherMap = new Map(teachers.map((t) => [t._id.toString(), t]));
 
     return tuitions.map((t) => {

@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
+import { Modal } from '@/components/Modal';
 import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import {
   GraduationCap,
@@ -376,65 +377,61 @@ export default function TeacherProfilePage() {
       </main>
 
       {/* REQUEST CONTACT MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md bg-slate-900 border border-white/[0.1] rounded-2xl p-6 shadow-2xl relative">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <X className="h-5 w-5" />
-            </button>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        titleId="request-contact-modal-title"
+        maxWidthClass="max-w-md"
+      >
+        <h3 id="request-contact-modal-title" className="text-xl font-bold text-white mb-1 pr-8">
+          Request Contact Details
+        </h3>
+        <p className="text-xs text-slate-400 mb-4">
+          Send a request to <strong>{teacher.name}</strong>. Introduce your requirement (student class, subjects, and area).
+        </p>
 
-            <h3 className="text-xl font-bold text-white mb-1">Request Contact Details</h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Send a request to <strong>{teacher.name}</strong>. Introduce your requirement (student class, subjects, and area).
-            </p>
-
-            <form onSubmit={handleRequestSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Message / Requirement Note (Optional)
-                </label>
-                <textarea
-                  rows={4}
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="e.g. Looking for HSC 2026 Physics tutor for my son in Dhanmondi. 3 days a week."
-                  className="w-full p-3 bg-slate-950 border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingRequest}
-                  className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {submittingRequest ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      <span>Send Request</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+        <form onSubmit={handleRequestSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              Message / Requirement Note (Optional)
+            </label>
+            <textarea
+              rows={4}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Looking for HSC 2026 Physics tutor for my son in Dhanmondi. 3 days a week."
+              className="w-full p-3 bg-slate-950 border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submittingRequest}
+              className="h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {submittingRequest ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Sending...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  <span>Send Request</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <BottomNav />
     </div>

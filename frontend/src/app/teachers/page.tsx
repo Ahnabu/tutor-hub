@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   GraduationCap,
   CheckCircle2,
@@ -40,22 +41,23 @@ const COMMON_AREAS = ['All', 'Dhanmondi', 'Mirpur', 'Gulshan', 'Uttara', 'Bashun
 
 export default function TeachersDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [selectedSubject, setSelectedSubject] = useState('All');
   const [selectedArea, setSelectedArea] = useState('All');
 
   // Fetch Public Teacher Directory
-  const { data, isLoading } = useQuery<{
+  const { data, isLoading, isError, refetch } = useQuery<{
     teachers: PublicTeacher[];
     total: number;
   }>({
-    queryKey: ['public-teachers-directory', searchTerm, selectedSubject, selectedArea],
-    queryFn: async () => {
+    queryKey: ['public-teachers-directory', debouncedSearch, selectedSubject, selectedArea],
+    queryFn: async ({ signal }) => {
       const params: Record<string, string> = {};
-      if (searchTerm.trim()) params.search = searchTerm.trim();
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
       if (selectedSubject !== 'All') params.subject = selectedSubject;
       if (selectedArea !== 'All') params.area = selectedArea;
 
-      const res = await api.get('/teachers', { params });
+      const res = await api.get('/teachers', { params, signal });
       return res.data.data;
     },
   });
@@ -143,9 +145,42 @@ export default function TeachersDirectoryPage() {
 
         {/* Teachers Grid */}
         {isLoading ? (
-          <div className="p-16 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-400 mx-auto mb-2" />
-            <span className="text-xs text-slate-400">Loading tutors directory...</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="p-6 rounded-3xl bg-slate-900/60 border border-white/[0.08] space-y-4 animate-pulse"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-2xl bg-white/[0.08]" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-32 rounded bg-white/[0.08]" />
+                    <div className="h-3 w-24 rounded bg-white/[0.05]" />
+                  </div>
+                </div>
+                <div className="h-12 rounded-xl bg-white/[0.04]" />
+                <div className="flex gap-2">
+                  <div className="h-6 w-16 rounded-lg bg-white/[0.06]" />
+                  <div className="h-6 w-20 rounded-lg bg-white/[0.06]" />
+                </div>
+                <div className="h-10 rounded-xl bg-white/[0.06]" />
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="p-16 text-center rounded-3xl bg-slate-900/40 border border-rose-500/20">
+            <GraduationCap className="h-12 w-12 text-rose-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white">Could not load tutors directory</h3>
+            <p className="text-xs text-slate-400 mt-1 mb-4">
+              There was a problem connecting to the server. Please try again.
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-semibold cursor-pointer"
+            >
+              Try Again
+            </button>
           </div>
         ) : teachers.length === 0 ? (
           <div className="p-16 text-center rounded-3xl bg-slate-900/40 border border-white/[0.06]">

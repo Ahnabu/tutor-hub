@@ -42,7 +42,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (userData: IUser) => void;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   refetchUser: () => Promise<void>;
 }
 
@@ -94,12 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = async () => {
+  const logout = async (redirectTo = '/login') => {
     try {
       await api.post('/auth/logout');
     } finally {
       setUser(null);
-      router.push('/login');
+      router.push(redirectTo);
     }
   };
 

@@ -3,6 +3,7 @@ import { SessionLog, ISessionLog } from '../models/SessionLog.js';
 import { Tuition } from '../models/Tuition.js';
 import { SessionType, AttendanceStatus, HomeworkStatus } from '../enums/index.js';
 import { NotFoundError, ForbiddenError, ConflictError } from '../utils/errors.js';
+import { withOptionalTransaction } from '../utils/transaction.js';
 
 export interface CreateSessionInput {
   clientRequestId: string;
@@ -55,7 +56,10 @@ export class SessionService {
       nextClassPlan?: string;
     }>;
   }> {
-    const tuition = await Tuition.findById(tuitionId);
+    const tuition = await Tuition.findOne({
+      _id: tuitionId,
+      deletedAt: { $exists: false },
+    });
     if (!tuition) {
       throw new NotFoundError('Tuition agreement not found');
     }
@@ -67,6 +71,7 @@ export class SessionService {
     const latestSession = await SessionLog.findOne({
       tuitionId: tuition._id,
       sessionType: { $ne: SessionType.CANCELLED },
+      deletedAt: { $exists: false },
     }).sort({ sessionDate: -1 });
 
     const studentMap = new Map<string, string>();
@@ -112,83 +117,93 @@ export class SessionService {
     tuitionId: string,
     input: CreateSessionInput
   ): Promise<ISessionLog> {
-    const tuition = await Tuition.findById(tuitionId);
-    if (!tuition) {
-      throw new NotFoundError('Tuition agreement not found');
-    }
-    if (tuition.teacherId.toString() !== teacherId) {
-      throw new ForbiddenError('You do not have access to this tuition');
-    }
-
-    // Idempotency check via clientRequestId
-    const existing = await SessionLog.findOne({
-      tuitionId: tuition._id,
-      clientRequestId: input.clientRequestId,
-    });
-    if (existing) {
-      return existing;
-    }
-
-    // Determine cycle counting logic
-    let countsTowardCycle = false;
-    if (input.sessionType === SessionType.REGULAR) {
-      countsTowardCycle = true;
-    } else if (input.sessionType === SessionType.MAKEUP_CLASS) {
-      countsTowardCycle = tuition.scheduleConfig.makeupCountsTowardCycle;
-    } else if (input.sessionType === SessionType.EXTRA_CLASS) {
-      countsTowardCycle = tuition.scheduleConfig.extraClassCountsTowardCycle;
-    }
-
-    const sessionNumberInCycle = countsTowardCycle
-      ? tuition.currentCycle.completedDays + 1
-      : null;
-
-    const sessionLog = await SessionLog.create({
-      tuitionId: tuition._id,
-      teacherId: tuition.teacherId,
-      cycleNumber: tuition.currentCycle.cycleNumber,
-      sessionNumberInCycle,
-      sessionDate: new Date(input.sessionDate),
-      sessionLocalDate: input.sessionLocalDate,
-      startTime: input.startTime,
-      durationMinutes: input.durationMinutes || 90,
-      sessionType: input.sessionType,
-      cancelReason: input.cancelReason,
-      cancelledBy: input.cancelledBy,
-      countsTowardCycle,
-      clientRequestId: input.clientRequestId,
-      entries: input.entries.map((e) => ({
-        studentId: new mongoose.Types.ObjectId(e.studentId),
-        attendance: e.attendance,
-        subject: e.subject,
-        topicsTaught: e.topicsTaught,
-        unfinishedTopics: e.unfinishedTopics,
-        homeworkAssigned: e.homeworkAssigned,
-        previousHomeworkStatus: e.previousHomeworkStatus,
-        nextClassPlan: e.nextClassPlan,
-      })),
-      guardianVisibleRemarks: input.guardianVisibleRemarks,
-      teacherPrivateNotes: input.teacherPrivateNotes,
-      studentPerformanceRating: input.studentPerformanceRating,
-      editHistory: [],
-    });
-
-    // Advance tuition cycle completed days
-    if (countsTowardCycle) {
-      tuition.currentCycle.completedDays += 1;
-      if (input.sessionType === SessionType.EXTRA_CLASS) {
-        tuition.currentCycle.extraClassesCount += 1;
+    return withOptionalTransaction(async (session) => {
+      const tuition = await Tuition.findOne({
+        _id: tuitionId,
+        deletedAt: { $exists: false },
+      }).session(session ?? null);
+      if (!tuition) {
+        throw new NotFoundError('Tuition agreement not found');
       }
-      if (
-        tuition.currentCycle.completedDays >=
-        tuition.scheduleConfig.targetDaysPerCycle
-      ) {
-        tuition.currentCycle.readyToClose = true;
+      if (tuition.teacherId.toString() !== teacherId) {
+        throw new ForbiddenError('You do not have access to this tuition');
       }
-      await tuition.save();
-    }
 
-    return sessionLog;
+      // Idempotency check via clientRequestId
+      const existing = await SessionLog.findOne({
+        tuitionId: tuition._id,
+        clientRequestId: input.clientRequestId,
+      }).session(session ?? null);
+      if (existing) {
+        return existing;
+      }
+
+      // Determine cycle counting logic
+      let countsTowardCycle = false;
+      if (input.sessionType === SessionType.REGULAR) {
+        countsTowardCycle = true;
+      } else if (input.sessionType === SessionType.MAKEUP_CLASS) {
+        countsTowardCycle = tuition.scheduleConfig.makeupCountsTowardCycle;
+      } else if (input.sessionType === SessionType.EXTRA_CLASS) {
+        countsTowardCycle = tuition.scheduleConfig.extraClassCountsTowardCycle;
+      }
+
+      const sessionNumberInCycle = countsTowardCycle
+        ? tuition.currentCycle.completedDays + 1
+        : null;
+
+      const [sessionLog] = await SessionLog.create(
+        [
+          {
+            tuitionId: tuition._id,
+            teacherId: tuition.teacherId,
+            cycleNumber: tuition.currentCycle.cycleNumber,
+            sessionNumberInCycle,
+            sessionDate: new Date(input.sessionDate),
+            sessionLocalDate: input.sessionLocalDate,
+            startTime: input.startTime,
+            durationMinutes: input.durationMinutes || 90,
+            sessionType: input.sessionType,
+            cancelReason: input.cancelReason,
+            cancelledBy: input.cancelledBy,
+            countsTowardCycle,
+            clientRequestId: input.clientRequestId,
+            entries: input.entries.map((e) => ({
+              studentId: new mongoose.Types.ObjectId(e.studentId),
+              attendance: e.attendance,
+              subject: e.subject,
+              topicsTaught: e.topicsTaught,
+              unfinishedTopics: e.unfinishedTopics,
+              homeworkAssigned: e.homeworkAssigned,
+              previousHomeworkStatus: e.previousHomeworkStatus,
+              nextClassPlan: e.nextClassPlan,
+            })),
+            guardianVisibleRemarks: input.guardianVisibleRemarks,
+            teacherPrivateNotes: input.teacherPrivateNotes,
+            studentPerformanceRating: input.studentPerformanceRating,
+            editHistory: [],
+          },
+        ],
+        { session }
+      );
+
+      // Advance tuition cycle completed days
+      if (countsTowardCycle) {
+        tuition.currentCycle.completedDays += 1;
+        if (input.sessionType === SessionType.EXTRA_CLASS) {
+          tuition.currentCycle.extraClassesCount += 1;
+        }
+        if (
+          tuition.currentCycle.completedDays >=
+          tuition.scheduleConfig.targetDaysPerCycle
+        ) {
+          tuition.currentCycle.readyToClose = true;
+        }
+        await tuition.save({ session });
+      }
+
+      return sessionLog;
+    });
   }
 
   /**
@@ -200,7 +215,10 @@ export class SessionService {
     page = 1,
     limit = 20
   ): Promise<{ sessions: ISessionLog[]; total: number; page: number; totalPages: number }> {
-    const tuition = await Tuition.findById(tuitionId);
+    const tuition = await Tuition.findOne({
+      _id: tuitionId,
+      deletedAt: { $exists: false },
+    });
     if (!tuition) {
       throw new NotFoundError('Tuition agreement not found');
     }
@@ -209,7 +227,7 @@ export class SessionService {
     }
 
     const skip = (page - 1) * limit;
-    const filter = { tuitionId: tuition._id };
+    const filter = { tuitionId: tuition._id, deletedAt: { $exists: false } };
 
     const [sessions, total] = await Promise.all([
       SessionLog.find(filter).sort({ sessionDate: -1 }).skip(skip).limit(limit),

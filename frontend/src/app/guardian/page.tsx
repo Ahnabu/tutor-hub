@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
+import { ChangePasswordForm } from '@/components/ChangePasswordForm';
 import {
   GraduationCap,
   CheckCircle2,
@@ -250,8 +251,8 @@ export default function GuardianDashboardPage() {
                         </div>
                         <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/[0.05]">
                           <div
-                            className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${percent}%` }}
+                            className="bg-emerald-500 w-full h-full rounded-full transition-transform duration-500 origin-left"
+                            style={{ transform: `scaleX(${Math.min(1, Math.max(0, percent / 100))})` }}
                           />
                         </div>
                         <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
@@ -404,7 +405,7 @@ function GuardianMarketplacePostsSection() {
         setPosts(res.data.data.posts || []);
       }
     } catch {
-      // quiet fail
+      toast.error('Could not load your posted tuition requirements.');
     } finally {
       setLoading(false);
     }
@@ -427,7 +428,7 @@ function GuardianMarketplacePostsSection() {
         setApplications(res.data.data.applications || []);
       }
     } catch {
-      // quiet fail
+      toast.error('Could not load your posted tuition requirements.');
     } finally {
       setLoadingApps(false);
     }
@@ -720,120 +721,8 @@ function GuardianSecurityModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {/* Change Password Form */}
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-4">
-            <div className="flex items-center gap-2">
-              <KeyRound className="h-4 w-4 text-emerald-400" />
-              <h4 className="text-sm font-bold text-white">Change Password</h4>
-            </div>
-
-            <form onSubmit={handleChangePassword} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    required
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter current password"
-                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showCurrentPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  New Password (Min. 8 characters)
-                </label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new secure password"
-                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showNewPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
-                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                    aria-label="Toggle confirm password visibility"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={changingPassword || !currentPassword || !newPassword}
-                className="w-full h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {changingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                <span>Update Password</span>
-              </button>
-            </form>
-          </div>
-
-          {/* Remote Sessions */}
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] space-y-2.5">
-            <div className="flex items-center gap-2">
-              <LogOut className="h-4 w-4 text-amber-400" />
-              <h4 className="text-xs font-bold text-white">Remote Device Sessions</h4>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Sign out from all other active sessions and revoke existing refresh tokens across all devices.
-            </p>
-            <button
-              type="button"
-              onClick={handleLogoutAll}
-              disabled={loggingOutAll}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs flex items-center gap-2 border border-white/[0.08] transition-all cursor-pointer disabled:opacity-50"
-            >
-              {loggingOutAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-              <span>Sign Out of Other Devices</span>
-            </button>
-          </div>
+          {/* Change Password & Remote Sessions */}
+          <ChangePasswordForm />
         </div>
       </div>
     </div>

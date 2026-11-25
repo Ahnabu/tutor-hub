@@ -4,6 +4,8 @@ import { MarketplaceApplication, IMarketplaceApplication } from '../models/Marke
 import { User, IUser } from '../models/User.js';
 import { ContactGrant } from '../models/ContactGrant.js';
 import { Notification } from '../models/Notification.js';
+import { SystemConfig } from '../models/SystemConfig.js';
+import { escapeRegex } from '../utils/sanitize.js';
 import {
   MarketplaceAuthorRole,
   MarketplaceModerationStatus,
@@ -18,6 +20,7 @@ import {
   MarketplaceFilterInput,
 } from '../schemas/marketplace.schema.js';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors.js';
+import { withOptionalTransaction } from '../utils/transaction.js';
 
 
 export class MarketplaceService {
@@ -28,10 +31,10 @@ export class MarketplaceService {
     authorId: string,
     input: CreateMarketplacePostInput
   ): Promise<IMarketplacePost> {
-    const user = await User.findById(authorId);
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
+    const sysConfig = await SystemConfig.findOne().select('requireAdminApprovalForPosts').lean();
+    const moderationStatus = sysConfig?.requireAdminApprovalForPosts
+      ? MarketplaceModerationStatus.PENDING_APPROVAL
+      : MarketplaceModerationStatus.APPROVED;
 
     const post = await MarketplacePost.create({
       authorId: new mongoose.Types.ObjectId(authorId),
@@ -54,7 +57,7 @@ export class MarketplaceService {
       targetDaysPerMonth: input.targetDaysPerMonth,
       budgetAmount: input.budgetAmount,
       genderPreference: input.genderPreference || 'ANY',
-      moderationStatus: MarketplaceModerationStatus.APPROVED, // Default approved for responsive UX
+      moderationStatus,
       status: MarketplacePostStatus.OPEN,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
@@ -77,7 +80,7 @@ export class MarketplaceService {
     };
 
     if (filters.search) {
-      const searchRegex = new RegExp(filters.search, 'i');
+      const searchRegex = new RegExp(escapeRegex(filters.search), 'i');
       query.$or = [
         { title: searchRegex },
         { description: searchRegex },
@@ -88,11 +91,11 @@ export class MarketplaceService {
     }
 
     if (filters.area) {
-      query['location.area'] = new RegExp(`^${filters.area}$`, 'i');
+      query['location.area'] = new RegExp(`^${escapeRegex(filters.area)}$`, 'i');
     }
 
     if (filters.subject) {
-      query['studentsInfo.subjects'] = new RegExp(filters.subject, 'i');
+      query['studentsInfo.subjects'] = new RegExp(escapeRegex(filters.subject), 'i');
     }
 
     if (filters.mode) {
@@ -398,41 +401,58 @@ export class MarketplaceService {
     }
 
     // Action is ACCEPT:
-    application.status = MarketplaceApplicationStatus.ACCEPTED;
-    await application.save();
+    await withOptionalTransaction(async (session) => {
+      application.status = MarketplaceApplicationStatus.ACCEPTED;
+      await application.save({ session });
 
-    // Mark post as HIRED
-    await MarketplacePost.findByIdAndUpdate(post._id, {
-      status: MarketplacePostStatus.HIRED,
-      hiredTeacherId: application.teacherId,
-    });
+      // Mark post as HIRED
+      await MarketplacePost.findByIdAndUpdate(
+        post._id,
+        {
+          status: MarketplacePostStatus.HIRED,
+          hiredTeacherId: application.teacherId,
+        },
+        { session }
+      );
 
-    // Auto-reject other pending applications for this post
-    await MarketplaceApplication.updateMany(
-      {
-        postId: post._id,
-        _id: { $ne: application._id },
-        status: MarketplaceApplicationStatus.PENDING,
-      },
-      { status: MarketplaceApplicationStatus.REJECTED }
-    );
+      // Auto-reject other pending applications for this post
+      await MarketplaceApplication.updateMany(
+        {
+          postId: post._id,
+          _id: { $ne: application._id },
+          status: MarketplaceApplicationStatus.PENDING,
+        },
+        { status: MarketplaceApplicationStatus.REJECTED },
+        { session }
+      );
 
-    // Create mutual ContactGrant so teacher and guardian can communicate
-    await ContactGrant.create({
-      teacherId: application.teacherId,
-      guardianId: post.authorId,
-      source: ContactGrantSource.MARKETPLACE_ACCEPT,
-      postId: post._id,
-    });
+      // Upsert mutual ContactGrant so teacher and guardian can communicate
+      await ContactGrant.findOneAndUpdate(
+        {
+          teacherId: application.teacherId,
+          guardianId: post.authorId,
+        },
+        {
+          source: ContactGrantSource.MARKETPLACE_ACCEPT,
+          postId: post._id,
+          $unset: { revokedAt: 1 },
+        },
+        { upsert: true, new: true, session }
+      );
 
-
-    // Notify teacher
-    await Notification.create({
-      userId: application.teacherId,
-      type: NotificationType.APPLICATION_ACCEPTED,
-      title: 'Tuition Application Accepted! 🎉',
-      body: `Your application for "${post.title}" was accepted! Direct contact details are now unlocked.`,
-      data: { postId: post._id.toString(), applicationId: application._id.toString() },
+      // Notify teacher
+      await Notification.create(
+        [
+          {
+            userId: application.teacherId,
+            type: NotificationType.APPLICATION_ACCEPTED,
+            title: 'Tuition Application Accepted! 🎉',
+            body: `Your application for "${post.title}" was accepted! Direct contact details are now unlocked.`,
+            data: { postId: post._id.toString(), applicationId: application._id.toString() },
+          },
+        ],
+        { session }
+      );
     });
 
     return {

@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { GuardianController } from '../controllers/guardian.controller.js';
 import { authenticate, authorizeRoles } from '../middlewares/auth.js';
 import { validateRequest } from '../middlewares/validate.js';
+import { authLimiter } from '../middlewares/rateLimit.js';
 import { verifySharePinSchema } from '../schemas/guardian.schema.js';
 import { UserRole } from '../enums/index.js';
 
 const router = Router();
 
 // Public / PIN-protected view routes
-router.post('/view/:token/verify-pin', validateRequest({ body: verifySharePinSchema }), GuardianController.verifyPin);
+router.post('/view/:token/verify-pin', authLimiter, validateRequest({ body: verifySharePinSchema }), GuardianController.verifyPin);
 router.get('/view/:token', GuardianController.getTuitionByShareToken);
 
 // Claimed Guardian authenticated dashboard

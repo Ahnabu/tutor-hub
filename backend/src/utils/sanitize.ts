@@ -23,3 +23,10 @@ export const sanitizeInput = <T>(input: T): T => {
 
   return cleanObj as T;
 };
+
+/**
+ * Escapes RegExp special characters from user-supplied search strings to prevent ReDoS.
+ */
+export const escapeRegex = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};

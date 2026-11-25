@@ -40,7 +40,7 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().default('TutorHub <noreply@tutorhub.local>'),
 
   ADMIN_EMAIL: z.string().email().default('admin@tutorhub.local'),
-  ADMIN_PASSWORD: z.string().min(8).default('AdminSecurePassword123!'),
+  ADMIN_PASSWORD: z.string().min(8).optional(),
 });
 
 const parseEnv = () => {

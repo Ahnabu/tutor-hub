@@ -47,7 +47,7 @@ const corsOptions: cors.CorsOptions = {
     'X-Requested-With',
     'Accept',
     'Origin',
-    'x-bypass-csrf',
+    ...(env.NODE_ENV === 'test' ? ['x-bypass-csrf'] : []),
   ],
   optionsSuccessStatus: 204,
 };
@@ -83,7 +83,12 @@ app.get('/healthz', (_req: Request, res: Response) => {
 });
 
 app.get('/readyz', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ready', timestamp: new Date().toISOString() });
+  const isDbReady = mongoose.connection.readyState === 1;
+  res.status(isDbReady ? 200 : 503).json({
+    status: isDbReady ? 'ready' : 'not_ready',
+    dbState: mongoose.connection.readyState,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Ensure database connection for serverless cold starts
@@ -95,13 +100,24 @@ app.use(async (_req: Request, _res: Response, next) => {
       return next(err);
     }
   }
-  // If running in serverless, opportunistic flush of any pending outbox emails
-  if (process.env.VERCEL && env.SMTP_USER && env.SMTP_PASS) {
-    EmailWorker.flushPendingOutbox(3).catch((err) => {
-      console.warn('Background serverless outbox flush non-fatal error:', err.message);
-    });
-  }
   next();
+});
+
+// Dedicated cron endpoint for flushing pending EmailOutbox records in serverless
+app.get(`${env.API_PREFIX}/cron/flush-outbox`, async (req: Request, res: Response, next) => {
+  try {
+    const cronSecret = process.env.CRON_SECRET;
+    if (env.NODE_ENV === 'production' && cronSecret) {
+      if (req.headers.authorization !== `Bearer ${cronSecret}`) {
+        res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid cron secret' } });
+        return;
+      }
+    }
+    await EmailWorker.flushPendingOutbox(10);
+    res.status(200).json({ status: 'ok' });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // 6. Application API Routes

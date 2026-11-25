@@ -76,6 +76,40 @@ button,
   min-width: 44px;
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Complete Light & Dark Theme Adaptations                                     */
 /* -------------------------------------------------------------------------- */
@@ -106,29 +140,25 @@ html:not(.dark) header {
 }
 
 /* Light Mode Cards & Surfaces */
-html:not(.dark) [class*="bg-slate-900"],
-html:not(.dark) [class*="bg-slate-950"] {
-  background-color: #ffffff;
-  border-color: rgba(15, 23, 42, 0.08);
-}
-
-html:not(.dark) .bg-slate-950\/50,
-html:not(.dark) .bg-slate-950\/60,
-html:not(.dark) .bg-slate-950\/70,
-html:not(.dark) .bg-slate-950\/80,
-html:not(.dark) .bg-slate-950\/90 {
-  background-color: #f1f5f9 !important;
-  border-color: rgba(15, 23, 42, 0.08) !important;
-}
-
-html:not(.dark) .bg-slate-900\/60,
-html:not(.dark) .bg-slate-900\/70,
-html:not(.dark) .bg-slate-900\/80,
-html:not(.dark) .bg-slate-900\/85,
-html:not(.dark) .bg-slate-900\/90 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(15, 23, 42, 0.08) !important;
+html:not(.dark) .bg-slate-900,
+html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-\[\#0D1322\],
+html:not(.dark) [class*="bg-slate-900/"] {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
   box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+}
+
+html:not(.dark) .bg-slate-800,
+html:not(.dark) [class*="bg-slate-800/"],
+html:not(.dark) [class*="bg-slate-950/"],
+html:not(.dark) [class*="bg-white/[0."] {
+  background-color: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+html:not(.dark) .via-slate-900\/90 {
+  --tw-gradient-via: rgba(255, 255, 255, 0.96) !important;
 }
 
 /* Light Mode Mobile Bottom Navigation */
@@ -143,11 +173,14 @@ html:not(.dark) nav[aria-label="Mobile Navigation"] a {
 }
 
 html:not(.dark) nav[aria-label="Mobile Navigation"] a.text-emerald-400 {
-  color: #059669 !important;
+  color: #047857 !important;
 }
 
 /* Light Mode Typography */
-html:not(.dark) .text-white {
+html:not(.dark) .text-white,
+html:not(.dark) .text-\[\#F8FAFC\],
+html:not(.dark) .text-slate-100,
+html:not(.dark) .hover\:text-white:hover {
   color: #0f172a !important;
 }
 
@@ -159,16 +192,81 @@ html:not(.dark) .text-slate-300 {
   color: #334155 !important;
 }
 
-html:not(.dark) .text-slate-400 {
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-slate-600 {
   color: #475569 !important;
 }
 
-html:not(.dark) .text-slate-500 {
-  color: #64748b !important;
+/* Light Mode Accent Text (WCAG AA compliant dark shades on white/light/tinted surfaces) */
+html:not(.dark) .text-emerald-100,
+html:not(.dark) .text-emerald-200,
+html:not(.dark) .text-emerald-300,
+html:not(.dark) .text-emerald-400 {
+  color: #065f46 !important;
 }
 
-html:not(.dark) .text-slate-100 {
-  color: #0f172a !important;
+html:not(.dark) .text-teal-100,
+html:not(.dark) .text-teal-200,
+html:not(.dark) .text-teal-300,
+html:not(.dark) .text-teal-400 {
+  color: #115e59 !important;
+}
+
+html:not(.dark) .text-indigo-100,
+html:not(.dark) .text-indigo-200,
+html:not(.dark) .text-indigo-300,
+html:not(.dark) .text-indigo-400 {
+  color: #3730a3 !important;
+}
+
+html:not(.dark) .text-amber-100,
+html:not(.dark) .text-amber-200,
+html:not(.dark) .text-amber-300,
+html:not(.dark) .text-amber-400 {
+  color: #b45309 !important;
+}
+
+html:not(.dark) .text-rose-100,
+html:not(.dark) .text-rose-200,
+html:not(.dark) .text-rose-300,
+html:not(.dark) .text-rose-400,
+html:not(.dark) .text-red-300,
+html:not(.dark) .text-red-400 {
+  color: #be123c !important;
+}
+
+html:not(.dark) .text-cyan-300,
+html:not(.dark) .text-cyan-400,
+html:not(.dark) .text-sky-300,
+html:not(.dark) .text-sky-400,
+html:not(.dark) .text-blue-300,
+html:not(.dark) .text-blue-400 {
+  color: #0369a1 !important;
+}
+
+html:not(.dark) .text-purple-300,
+html:not(.dark) .text-purple-400 {
+  color: #6b21a8 !important;
+}
+
+/* Darken hero gradient text in light mode */
+html:not(.dark) .bg-clip-text.text-transparent {
+  background-image: linear-gradient(to right, #047857, #0f766e, #4338ca) !important;
+}
+
+/* Preserve white text ONLY on solid colored buttons/badges (never on /10 or /20 translucent containers) */
+html:not(.dark) .bg-indigo-500.text-white,
+html:not(.dark) .bg-indigo-600.text-white,
+html:not(.dark) .bg-emerald-600.text-white,
+html:not(.dark) .bg-rose-500.text-white,
+html:not(.dark) .bg-rose-600.text-white,
+html:not(.dark) .bg-indigo-500 > .text-white,
+html:not(.dark) .bg-indigo-600 > .text-white,
+html:not(.dark) .bg-emerald-600 > .text-white,
+html:not(.dark) .bg-rose-500 > .text-white,
+html:not(.dark) .bg-rose-600 > .text-white {
+  color: #ffffff !important;
 }
 
 html:not(.dark) .border-white\/\[0\.04\],

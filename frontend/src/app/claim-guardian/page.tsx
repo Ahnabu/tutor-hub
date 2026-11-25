@@ -167,7 +167,6 @@ function ClaimGuardianContent() {
               />
               <button
                 type="button"
-                tabIndex={-1}
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}

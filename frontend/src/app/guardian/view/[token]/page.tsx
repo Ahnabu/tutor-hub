@@ -197,7 +197,6 @@ export default function GuardianPortalViewPage() {
                 />
                 <button
                   type="button"
-                  tabIndex={-1}
                   onClick={() => setShowPin(!showPin)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
                   aria-label={showPin ? 'Hide PIN' : 'Show PIN'}
@@ -312,8 +311,8 @@ export default function GuardianPortalViewPage() {
           {/* Progress bar */}
           <div className="w-full bg-slate-950 rounded-full h-3 mb-4 overflow-hidden border border-white/[0.06] p-0.5">
             <div
-              className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700"
-              style={{ width: `${progressPercent}%` }}
+              className="bg-gradient-to-r from-emerald-500 to-teal-400 w-full h-full rounded-full transition-transform duration-700 origin-left"
+              style={{ transform: `scaleX(${Math.min(1, Math.max(0, progressPercent / 100))})` }}
             />
           </div>
 

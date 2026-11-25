@@ -158,6 +158,7 @@ UserSchema.index(
   { unique: true, partialFilterExpression: { phone: { $type: 'string' } } }
 );
 UserSchema.index({ roles: 1, accountStatus: 1 });
+UserSchema.index({ roles: 1, accountStatus: 1, 'teacherProfile.isPublic': 1 });
 UserSchema.index({ 'teacherProfile.verificationStatus': 1 });
 UserSchema.index(
   { 'teacherProfile.slug': 1 },

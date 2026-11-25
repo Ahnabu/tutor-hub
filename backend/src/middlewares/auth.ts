@@ -37,7 +37,7 @@ export const authenticate = async (
       throw new UnauthorizedError('Invalid or expired authentication token', 'TOKEN_EXPIRED');
     }
 
-    const user = await User.findById(payload.sub);
+    const user = await User.findById(payload.sub).lean();
     if (!user) {
       throw new UnauthorizedError('User not found', 'USER_NOT_FOUND');
     }
@@ -62,7 +62,7 @@ export const authenticate = async (
       throw new UnauthorizedError('Session has been revoked', 'SESSION_REVOKED');
     }
 
-    req.user = user;
+    req.user = user as unknown as IUser;
     next();
   } catch (error) {
     next(error);

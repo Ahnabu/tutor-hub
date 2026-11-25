@@ -4,7 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
+import { Modal } from '@/components/Modal';
 import { useAuth } from '@/context/AuthContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -66,6 +68,7 @@ export default function MarketplacePage() {
   const [posts, setPosts] = useState<IMarketplacePostItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [selectedArea, setSelectedArea] = useState('All Areas');
   const [selectedMode, setSelectedMode] = useState<string>('ALL');
 
@@ -78,7 +81,7 @@ export default function MarketplacePage() {
     try {
       setLoading(true);
       const params: Record<string, string> = {};
-      if (searchTerm.trim()) params.search = searchTerm.trim();
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
       if (selectedArea !== 'All Areas') params.area = selectedArea;
       if (selectedMode !== 'ALL') params.mode = selectedMode;
 
@@ -91,7 +94,7 @@ export default function MarketplacePage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, selectedArea, selectedMode]);
+  }, [debouncedSearch, selectedArea, selectedMode]);
 
   useEffect(() => {
     fetchPosts();
@@ -353,21 +356,19 @@ export default function MarketplacePage() {
       </main>
 
       {/* Application Pitch Modal */}
-      {activePost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#0D1322] border border-white/[0.1] rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-indigo-400" />
-                <h3 className="text-lg font-bold text-white">Apply for Tuition</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActivePost(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      <Modal
+        isOpen={!!activePost}
+        onClose={() => setActivePost(null)}
+        titleId="apply-modal-title"
+        maxWidthClass="max-w-lg"
+      >
+        {activePost && (
+          <>
+            <div className="flex items-center gap-2 mb-4 pr-8">
+              <CheckCircle2 className="h-5 w-5 text-indigo-400" />
+              <h3 id="apply-modal-title" className="text-lg font-bold text-white">
+                Apply for Tuition
+              </h3>
             </div>
 
             <div className="mb-4 p-3 rounded-xl bg-slate-900/60 border border-white/[0.06] text-xs space-y-1">
@@ -380,7 +381,7 @@ export default function MarketplacePage() {
             <form onSubmit={handleApply} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Your Pitch & Teaching Experience
+                  Your Pitch &amp; Teaching Experience
                 </label>
                 <textarea
                   rows={4}
@@ -396,22 +397,22 @@ export default function MarketplacePage() {
                 <button
                   type="button"
                   onClick={() => setActivePost(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white whitespace-nowrap"
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white whitespace-nowrap cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={applying}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 whitespace-nowrap shrink-0"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <span className="whitespace-nowrap">{applying ? 'Submitting...' : 'Send Application'}</span>
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
       <BottomNav />
     </div>
   );

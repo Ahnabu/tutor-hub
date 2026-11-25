@@ -16,6 +16,16 @@ export const updateTeacherProfileSchema = z
   })
   .strict();
 
+export const teacherFilterSchema = z
+  .object({
+    search: z.string().max(100).optional(),
+    subject: z.string().max(60).optional(),
+    area: z.string().max(100).optional(),
+    page: z.coerce.number().int().min(1).default(1).optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20).optional(),
+  })
+  .strict();
+
 export const submitVerificationSchema = z
   .object({
     docs: z

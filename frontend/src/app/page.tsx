@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
+import { useAuth } from '@/context/AuthContext';
 import {
   GraduationCap,
   ShieldCheck,
@@ -31,6 +32,13 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
+  const { user, isAuthenticated } = useAuth();
+  const dashboardHref = user?.roles.includes('ADMIN')
+    ? '/admin'
+    : user?.roles.includes('TEACHER')
+    ? '/teacher'
+    : '/guardian';
+
   // State for interactive Guided Introduction Tour Modal
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourRole, setTourRole] = useState<'teacher' | 'guardian'>('teacher');
@@ -42,18 +50,32 @@ export default function Home() {
   // State for Interactive FAQ Accordion
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
-  // Check if first-time visitor on mount
+  // Check if first-time visitor on mount (delay so hero is visible first)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const tourSeen = localStorage.getItem('tutorhub_intro_tour_seen');
       if (!tourSeen) {
-        // Automatically open guided tour on first entry
-        setIsTourOpen(true);
+        timer = setTimeout(() => {
+          setIsTourOpen(true);
+        }, 3500);
       }
     } catch {
       // Ignore localStorage errors in restricted environments
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!isTourOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeTour();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isTourOpen]);
 
   const closeTour = () => {
     setIsTourOpen(false);
@@ -198,10 +220,10 @@ export default function Home() {
           {/* Action CTAs */}
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
             <Link
-              href="/register"
+              href={isAuthenticated ? dashboardHref : '/register'}
               className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all active:scale-[0.99] whitespace-nowrap"
             >
-              <span className="whitespace-nowrap">Get Started Free</span>
+              <span className="whitespace-nowrap">{isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}</span>
               <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
 
@@ -635,13 +657,15 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 w-full max-w-md mx-auto">
-              <Link
-                href="/register"
-                className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all whitespace-nowrap"
-              >
-                <span className="whitespace-nowrap">Create Free Account</span>
-                <ArrowRight className="h-4 w-4 shrink-0" />
-              </Link>
+              {!isAuthenticated && (
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-8 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all whitespace-nowrap"
+                >
+                  <span className="whitespace-nowrap">Create Free Account</span>
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </Link>
+              )}
               <Link
                 href="/teachers"
                 className="w-full sm:w-auto h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-white/[0.08] transition-all whitespace-nowrap"
@@ -661,8 +685,18 @@ export default function Home() {
       {/* INTERACTIVE GUIDED INTRODUCTION TOUR MODAL (FIRST VISIT / REPLAY) */}
       {/* ==================================================================== */}
       {isTourOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2.5 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-fadeIn">
-          <div className="w-full max-w-xl bg-slate-900 border border-emerald-500/30 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-2xl flex flex-col max-h-[calc(100dvh-28px)] relative">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-2.5 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeTour();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tour-modal-title"
+            className="w-full max-w-xl bg-slate-900 border border-emerald-500/30 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-2xl flex flex-col max-h-[calc(100dvh-28px)] relative"
+          >
             {/* Modal Close Button */}
             <button
               type="button"
@@ -679,7 +713,7 @@ export default function Home() {
                 <Sparkles className="h-3 w-3" />
                 <span>Guided Introduction</span>
               </div>
-              <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+              <h2 id="tour-modal-title" className="text-lg sm:text-2xl font-bold text-white tracking-tight">
                 Welcome to TutorHub!
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">

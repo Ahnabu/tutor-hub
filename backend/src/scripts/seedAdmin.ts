@@ -19,6 +19,11 @@ const seedAdmin = async () => {
     process.exit(0);
   }
 
+  if (!env.ADMIN_PASSWORD) {
+    console.error('❌ FATAL: ADMIN_PASSWORD must be explicitly set in .env to seed an admin account.');
+    process.exit(1);
+  }
+
   const email = env.ADMIN_EMAIL.toLowerCase();
   const passwordHash = await hashPassword(env.ADMIN_PASSWORD);
 

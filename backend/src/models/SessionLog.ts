@@ -142,6 +142,7 @@ const SessionLogSchema = new Schema<ISessionLog>(
 
 // Indexes
 SessionLogSchema.index({ tuitionId: 1, sessionLocalDate: -1 });
+SessionLogSchema.index({ tuitionId: 1, sessionDate: -1, deletedAt: 1 });
 SessionLogSchema.index(
   { teacherId: 1, clientRequestId: 1 },
   { unique: true }

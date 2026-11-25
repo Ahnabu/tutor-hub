@@ -65,6 +65,7 @@ export interface IGuardianAccess {
 export interface ITuition extends Document {
   teacherId: mongoose.Types.ObjectId;
   title: string;
+  tuitionCode?: string;
   students: IStudentSubdoc[];
   scheduleConfig: IScheduleConfig;
   currentCycle: ICurrentCycle;
@@ -171,6 +172,7 @@ const TuitionSchema = new Schema<ITuition>(
       index: true,
     },
     title: { type: String, required: true, trim: true },
+    tuitionCode: { type: String, trim: true, index: true },
     students: { type: [StudentSubdocSchema], required: true },
     scheduleConfig: { type: ScheduleConfigSchema, required: true },
     currentCycle: { type: CurrentCycleSchema, required: true },
@@ -194,6 +196,7 @@ const TuitionSchema = new Schema<ITuition>(
 
 // Indexes
 TuitionSchema.index({ teacherId: 1, status: 1 });
+TuitionSchema.index({ teacherId: 1, status: 1, deletedAt: 1 });
 TuitionSchema.index(
   { 'guardianAccess.shareTokenHash': 1 },
   { unique: true, sparse: true }
