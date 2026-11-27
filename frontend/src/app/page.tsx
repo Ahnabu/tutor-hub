@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, getDashboardPath } from '@/context/AuthContext';
 import {
   GraduationCap,
   ShieldCheck,
@@ -33,11 +33,7 @@ import {
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
-  const dashboardHref = user?.roles.includes('ADMIN')
-    ? '/admin'
-    : user?.roles.includes('TEACHER')
-    ? '/teacher'
-    : '/guardian';
+  const dashboardHref = getDashboardPath(user?.roles);
 
   // State for interactive Guided Introduction Tour Modal
   const [isTourOpen, setIsTourOpen] = useState(false);

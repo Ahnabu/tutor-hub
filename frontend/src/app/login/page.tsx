@@ -4,19 +4,25 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, getDashboardPath } from '@/context/AuthContext';
 import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { ArrowRight, Loader2, AlertCircle, LogIn, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      router.replace(getDashboardPath(user.roles));
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -58,6 +64,17 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <Loader2 className="h-7 w-7 animate-spin text-emerald-400" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col">

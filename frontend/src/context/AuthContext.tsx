@@ -7,6 +7,12 @@ import { useRouter } from 'next/navigation';
 export type UserRole = 'TEACHER' | 'GUARDIAN' | 'ADMIN';
 export type AccountStatus = 'UNCLAIMED' | 'PENDING_VERIFICATION' | 'ACTIVE' | 'SUSPENDED';
 
+export const getDashboardPath = (roles?: UserRole[]): string => {
+  if (roles?.includes('ADMIN')) return '/admin';
+  if (roles?.includes('TEACHER')) return '/teacher';
+  return '/guardian';
+};
+
 export interface IUser {
   id: string;
   name: string;
@@ -85,13 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (userData: IUser) => {
     setUser(userData);
-    if (userData.roles.includes('ADMIN')) {
-      router.push('/admin');
-    } else if (userData.roles.includes('TEACHER')) {
-      router.push('/teacher');
-    } else {
-      router.push('/guardian');
-    }
+    router.push(getDashboardPath(userData.roles));
   };
 
   const logout = async (redirectTo = '/login') => {

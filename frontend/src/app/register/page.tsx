@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth, getDashboardPath } from '@/context/AuthContext';
 import { showErrorToast, showSuccessToast } from '@/lib/errorHandler';
 import { Navbar } from '@/components/Navbar';
 import { GraduationCap, Users, ArrowRight, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [role, setRole] = useState<'TEACHER' | 'GUARDIAN'>('TEACHER');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,6 +20,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      router.replace(getDashboardPath(user.roles));
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +66,17 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <Loader2 className="h-7 w-7 animate-spin text-emerald-400" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#090D16] text-[#F8FAFC] flex flex-col">
